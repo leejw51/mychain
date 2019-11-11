@@ -36,5 +36,5 @@ ls /root/bin -la
 /root/disk/launch.sh
 echo "ready"
 sleep 10 
-python3 /root/disk/test.py
-#sleep infinity 
+#python3 /root/disk/test.py
+sleep infinity 
