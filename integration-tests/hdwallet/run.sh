@@ -1,7 +1,7 @@
 #!/bin/bash
 docker-compose up -d
 echo "wait for docker setting up"
-sleep 60
+sleep 600
 echo "done"
 python3 ./disk/test.py
 echo "test finished"
