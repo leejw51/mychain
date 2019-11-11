@@ -1,0 +1,30 @@
+{
+    "rewards_pool": "6250000000000000000",
+    "distribution": {
+        "0x9ca76144cbea76bc47d47a8a016d215eb2831885": "2500000000000000000",
+        "0x3ae55c16800dc4bd0e3397a9d7806fb1f11639de": "1250000000000000000"
+    },
+    "unbonding_period": 60,
+    "required_council_node_stake": "1250000000000000000",
+    "jailing_config": {
+        "jail_duration": 86400,
+        "block_signing_window": 100,
+        "missed_block_threshold": 50
+    },
+    "slashing_config": {
+        "liveness_slash_percent": "0.1",
+        "byzantine_slash_percent": "0.2",
+        "slash_wait_period": 10800
+    },
+    "initial_fee_policy": {
+        "base_fee": "1.1",
+        "per_byte_fee": "1.25"
+    },
+    "council_nodes": {
+            "0x3ae55c16800dc4bd0e3397a9d7806fb1f11639de": {
+                "consensus_pubkey_type": "Ed25519",
+                "consensus_pubkey_b64": "pPxJH5wUamXcCvSxgywzmANuO0UNR5x3nCbUzsrCeX8="
+        }
+    },
+    "genesis_time": "2019-10-23T07:26:34.783271158Z"
+}
