@@ -233,7 +233,7 @@ def test_transfer():
         "dcro13z2xw689qhpmv7ge9xg428ljg4848rtu5dcpdmxy3m6njdsjtd3sl30d8n",
         [av, bv])
     print("wait for processing")
-    time.sleep(2)
+    time.sleep(10)
     get_staking_state("a", "1", "0xe5b4b42406a061752c78bf5c4d6d6fccca0b575f")
     show_balances()
     b_balance = int(get_balance("b", "1"))
@@ -245,12 +245,12 @@ def test_transfer():
         "dcro18gcxmetst2vnq82j35gn2963wy2e0jcp5cc2kefr6hzmzgqczu3qj3yvj9",
         str(amount), [av, bv])
     print("wait for processing")
-    time.sleep(2)
+    time.sleep(10)
 
     #txs_a = tranactions("a", "1")
     #txs_b = tranactions("b", "1")
     print("wait for processing")
-    time.sleep(2)
+    time.sleep(10)
     show_balances()
     b_new_balance = int(get_balance("b", "1"))
     assert b_balance + amount == b_new_balance
