@@ -34,6 +34,7 @@ echo "clear folders"
 ls /root/bin -la
 /root/bin/tendermint unsafe_reset_all
 /root/disk/launch.sh
-#sleep 5
-#python3 /root/disk/a.py
-sleep infinity 
+echo "ready"
+sleep 10 
+python3 /root/disk/test.py
+#sleep infinity 

@@ -32,5 +32,7 @@ steps:
   - mkdir bin
   - export PATH="$PATH:$PWD/bin"
   - echo "OK"
+  - cd integration-tests/hdwallet
+  - ./run.sh
 
 
