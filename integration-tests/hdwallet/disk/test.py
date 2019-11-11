@@ -321,7 +321,7 @@ def program():
                         "id": utxo,
                         "index": 0
                     }])
-    time.sleep(2)
+    time.sleep(10)
     sync("b", "1")
     b_staking = get_staking_state(
         "b", "1", "0x0bfbb3857f8daf13f9b7651dd4986671bf4c7a0e")
