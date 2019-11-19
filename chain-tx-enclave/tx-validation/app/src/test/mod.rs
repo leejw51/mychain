@@ -6,6 +6,7 @@ use chain_core::state::account::{
     StakedState, StakedStateAddress, StakedStateOpWitness, WithdrawUnbondedTx,
 };
 use chain_core::tx::fee::Fee;
+use chain_core::state::account::StakedStateDestination;
 use chain_core::tx::witness::tree::RawPubkey;
 use chain_core::tx::witness::EcdsaSignature;
 use chain_core::tx::PlainTxAux;
@@ -82,11 +83,10 @@ fn get_ecdsa_witness<C: Signing>(
 }
 
 fn get_account(account_address: &RedeemAddress) -> StakedState {
-    StakedState::new_init(
+    StakedState::new_init_unbonded(
         Coin::one(),
         0,
         StakedStateAddress::from(*account_address),
-        false,
     )
 }
 
@@ -130,7 +130,7 @@ pub fn test_sealing() {
     match end_b {
         Ok(b) => {
             debug!("request filter in the beginning");
-            assert!(b.iter().all(|x| *x == 0u8), "empty filter");
+            assert!(b.is_none(), "empty filter");
         }
         _ => {
             cleanup(&mut db);
@@ -162,7 +162,7 @@ pub fn test_sealing() {
         witness: witness0.clone(),
         payload: encrypt(
             enclave.geteid(),
-            EncryptionRequest::WithdrawStake(tx0, account.clone(), witness0),
+            EncryptionRequest::WithdrawStake(tx0, Box::new(account.clone()), witness0),
         ),
     };
 
@@ -209,7 +209,7 @@ pub fn test_sealing() {
     match end_b {
         Ok(b) => {
             debug!("request filter after one tx");
-            assert!(b.iter().any(|x| *x != 0u8), "non-empty filter");
+            assert!(b.unwrap().iter().any(|x| *x != 0u8), "non-empty filter");
         }
         _ => {
             cleanup(&mut db);

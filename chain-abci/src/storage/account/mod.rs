@@ -90,9 +90,10 @@ mod test {
     use chain_core::common::Timespec;
     use chain_core::init::address::RedeemAddress;
     use chain_core::init::coin::Coin;
-    use chain_core::state::account::Nonce;
-    use chain_core::state::account::StakedState;
-    use chain_core::state::account::StakedStateAddress;
+    use chain_core::state::account::{
+        CouncilNode, Nonce, Punishment, PunishmentKind, StakedState, StakedStateAddress,
+    };
+    use chain_core::state::tendermint::TendermintValidatorPubKey;
     use kvdb_memorydb::create;
     use quickcheck::quickcheck;
     use quickcheck::Arbitrary;
@@ -109,13 +110,33 @@ mod test {
             g.fill_bytes(&mut raw_address);
             let address: StakedStateAddress =
                 StakedStateAddress::from(RedeemAddress::from(raw_address));
+            let punishment = if bool::arbitrary(g) {
+                let time = i64::arbitrary(g);
+                Some(Punishment {
+                    kind: PunishmentKind::NonLive,
+                    jailed_until: time,
+                    slash_amount: None,
+                })
+            } else {
+                None
+            };
+            let council_node = if bool::arbitrary(g) {
+                let mut raw_pubkey = [0u8; 32];
+                g.fill_bytes(&mut raw_pubkey);
+                Some(CouncilNode::new(TendermintValidatorPubKey::Ed25519(
+                    raw_pubkey,
+                )))
+            } else {
+                None
+            };
             AccountWrapper(StakedState {
                 nonce,
                 bonded: Coin::from(bonded),
                 unbonded: Coin::from(unbonded),
                 unbonded_from,
                 address,
-                jailed_until: None,
+                punishment,
+                council_node,
             })
         }
     }

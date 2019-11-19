@@ -13,9 +13,9 @@ use chain_abci::storage::tx::StarlingFixedKey;
 use chain_abci::storage::Storage;
 use chain_core::common::MerkleTree;
 use chain_core::compute_app_hash;
-use chain_core::init::config::{InitNetworkParameters, NetworkParameters, StakedStateDestination};
+use chain_core::init::config::{InitNetworkParameters, NetworkParameters};
 use chain_core::init::{address::RedeemAddress, coin::Coin, config::InitConfig};
-use chain_core::state::account::StakedState;
+use chain_core::state::account::{StakedState, StakedStateDestination};
 use chain_core::tx::fee::{LinearFee, Milli};
 use client_common::{Error, ErrorKind, Result, ResultExt};
 
@@ -69,6 +69,7 @@ impl GenesisCommand {
             unbonding_period: genesis_dev.unbonding_period,
             jailing_config: genesis_dev.jailing_config,
             slashing_config: genesis_dev.slashing_config,
+            max_validators: 50,
         };
         let init_network_params = NetworkParameters::Genesis(network_params.clone());
         let config = InitConfig::new(

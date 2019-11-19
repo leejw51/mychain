@@ -1,6 +1,7 @@
 use parity_scale_codec::Decode;
 use secstr::SecUtf8;
 
+use crate::NetworkOpsClient;
 use chain_core::init::coin::{sum_coins, Coin};
 use chain_core::state::account::{
     DepositBondTx, StakedState, StakedStateAddress, StakedStateOpAttributes, StakedStateOpWitness,
@@ -12,11 +13,11 @@ use chain_core::tx::data::input::TxoPointer;
 use chain_core::tx::data::output::TxOut;
 use chain_core::tx::fee::FeeAlgorithm;
 use chain_core::tx::{TransactionId, TxAux};
+use chain_tx_validation::{check_inputs_basic, check_outputs_basic, verify_unjailed};
 use client_common::tendermint::Client;
 use client_common::{Error, ErrorKind, Result, ResultExt, SignedTransaction};
-use client_core::{Signer, TransactionObfuscation, UnspentTransactions, WalletClient};
-
-use crate::NetworkOpsClient;
+use client_core::signer::{DummySigner, Signer};
+use client_core::{TransactionObfuscation, UnspentTransactions, WalletClient};
 
 /// Default implementation of `NetworkOpsClient`
 pub struct DefaultNetworkOpsClient<W, S, C, F, E>
@@ -91,6 +92,25 @@ where
             StakedStateAddress::BasicRedeem(ref a) => self.get_account(&a.0),
         }
     }
+
+    /// Calculate the withdraw unbounded fee
+    fn calculate_fee(&self, outputs: Vec<TxOut>, attributes: TxAttributes) -> Result<Coin> {
+        let tx = WithdrawUnbondedTx::new(0, outputs, attributes);
+        // mock the signature
+        let dummy_signer = DummySigner();
+        let tx_aux = dummy_signer.mock_txaux_for_withdraw(tx);
+        let fee = self
+            .fee_algorithm
+            .calculate_for_txaux(&tx_aux)
+            .chain(|| {
+                (
+                    ErrorKind::IllegalInput,
+                    "Calculated fee is more than the maximum allowed value",
+                )
+            })?
+            .to_coin();
+        Ok(fee)
+    }
 }
 
 impl<W, S, C, F, E> NetworkOpsClient for DefaultNetworkOpsClient<W, S, C, F, E>
@@ -136,6 +156,13 @@ where
             &unspent_transactions.select_all(),
         )?;
 
+        check_inputs_basic(&transaction.inputs, &witness).map_err(|e| {
+            Error::new(
+                ErrorKind::ValidationError,
+                format!("Failed to validate transaction inputs: {}", e),
+            )
+        })?;
+
         let signed_transaction = SignedTransaction::DepositStakeTransaction(transaction, witness);
         let tx_aux = self.transaction_cipher.encrypt(signed_transaction)?;
 
@@ -151,6 +178,13 @@ where
         attributes: StakedStateOpAttributes,
     ) -> Result<TxAux> {
         let staked_state = self.get_staked_state(name, passphrase, &address)?;
+
+        verify_unjailed(&staked_state).map_err(|e| {
+            Error::new(
+                ErrorKind::ValidationError,
+                format!("Failed to validate staking account: {}", e),
+            )
+        })?;
 
         if staked_state.bonded < value {
             return Err(Error::new(
@@ -201,6 +235,13 @@ where
     ) -> Result<TxAux> {
         let staked_state = self.get_staked_state(name, passphrase, from_address)?;
 
+        verify_unjailed(&staked_state).map_err(|e| {
+            Error::new(
+                ErrorKind::ValidationError,
+                format!("Failed to validate staking account: {}", e),
+            )
+        })?;
+
         let output_value = sum_coins(outputs.iter().map(|output| output.value))
             .chain(|| (ErrorKind::InvalidInput, "Error while adding output values"))?;
 
@@ -242,7 +283,7 @@ where
 
         let signed_transaction = SignedTransaction::WithdrawUnbondedStakeTransaction(
             transaction,
-            staked_state,
+            Box::new(staked_state),
             signature,
         );
         let tx_aux = self.transaction_cipher.encrypt(signed_transaction)?;
@@ -312,41 +353,40 @@ where
     ) -> Result<TxAux> {
         let staked_state = self.get_staked_state(name, passphrase, from_address)?;
 
+        verify_unjailed(&staked_state).map_err(|e| {
+            Error::new(
+                ErrorKind::ValidationError,
+                format!("Failed to validate staking account: {}", e),
+            )
+        })?;
+
         let temp_output =
             TxOut::new_with_timelock(to_address.clone(), Coin::zero(), staked_state.unbonded_from);
-
-        let temp_transaction = self.create_withdraw_unbonded_stake_transaction(
-            name,
-            passphrase,
-            from_address,
-            vec![temp_output],
-            attributes.clone(),
-        )?;
-
-        let fee = self
-            .fee_algorithm
-            .calculate_for_txaux(&temp_transaction)
-            .chain(|| {
-                (
-                    ErrorKind::IllegalInput,
-                    "Calculated fee is more than the maximum allowed value",
-                )
-            })?
-            .to_coin();
-
+        let fee = self.calculate_fee(vec![temp_output], attributes.clone())?;
         let amount = (staked_state.unbonded - fee).chain(|| {
             (
                 ErrorKind::IllegalInput,
                 "Calculated fee is more than the unbonded amount",
             )
         })?;
-        let output = TxOut::new_with_timelock(to_address, amount, staked_state.unbonded_from);
+        let outputs = vec![TxOut::new_with_timelock(
+            to_address,
+            amount,
+            staked_state.unbonded_from,
+        )];
+
+        check_outputs_basic(&outputs).map_err(|e| {
+            Error::new(
+                ErrorKind::ValidationError,
+                format!("Failed to validate staking account: {}", e),
+            )
+        })?;
 
         self.create_withdraw_unbonded_stake_transaction(
             name,
             passphrase,
             from_address,
-            vec![output],
+            outputs,
             attributes,
         )
     }
@@ -377,8 +417,9 @@ mod tests {
 
     use chain_core::init::address::RedeemAddress;
     use chain_core::init::coin::CoinError;
-    use chain_core::state::account::StakedState;
-    use chain_core::state::account::StakedStateOpAttributes;
+    use chain_core::state::account::{
+        Punishment, PunishmentKind, StakedState, StakedStateOpAttributes,
+    };
     use chain_core::tx::data::input::TxoIndex;
     use chain_core::tx::data::TxId;
     use chain_core::tx::fee::Fee;
@@ -448,6 +489,65 @@ mod tests {
     }
 
     #[derive(Default, Clone)]
+    pub struct MockJailedClient;
+
+    impl Client for MockJailedClient {
+        fn genesis(&self) -> Result<Genesis> {
+            unreachable!()
+        }
+
+        fn status(&self) -> Result<Status> {
+            unreachable!()
+        }
+
+        fn block(&self, _: u64) -> Result<Block> {
+            unreachable!()
+        }
+
+        fn block_batch<'a, T: Iterator<Item = &'a u64>>(&self, _heights: T) -> Result<Vec<Block>> {
+            unreachable!()
+        }
+
+        fn block_results(&self, _height: u64) -> Result<BlockResults> {
+            unreachable!()
+        }
+
+        fn block_results_batch<'a, T: Iterator<Item = &'a u64>>(
+            &self,
+            _heights: T,
+        ) -> Result<Vec<BlockResults>> {
+            unreachable!()
+        }
+
+        fn broadcast_transaction(&self, _: &[u8]) -> Result<BroadcastTxResult> {
+            unreachable!()
+        }
+
+        fn query(&self, _path: &str, _data: &[u8]) -> Result<QueryResult> {
+            let staked_state = StakedState::new(
+                0,
+                Coin::new(1000000).unwrap(),
+                Coin::new(2499999999999999999 + 1).unwrap(),
+                0,
+                StakedStateAddress::BasicRedeem(RedeemAddress::default()),
+                Some(Punishment {
+                    kind: PunishmentKind::NonLive,
+                    jailed_until: 1,
+                    slash_amount: None,
+                }),
+            );
+
+            Ok(QueryResult {
+                response: Response {
+                    code: 0,
+                    value: base64::encode(&staked_state.encode()),
+                    log: "".to_owned(),
+                },
+            })
+        }
+    }
+
+    #[derive(Default, Clone)]
     pub struct MockClient;
 
     impl Client for MockClient {
@@ -485,11 +585,11 @@ mod tests {
         fn query(&self, _path: &str, _data: &[u8]) -> Result<QueryResult> {
             let staked_state = StakedState::new(
                 0,
-                Coin::zero(),
+                Coin::new(1000000).unwrap(),
                 Coin::new(2499999999999999999 + 1).unwrap(),
                 0,
                 StakedStateAddress::BasicRedeem(RedeemAddress::default()),
-                Some(1),
+                None,
             );
 
             Ok(QueryResult {
@@ -527,22 +627,27 @@ mod tests {
             MockTransactionCipher,
         );
 
-        let inputs: Vec<TxoPointer> = vec![];
+        let inputs: Vec<TxoPointer> = vec![TxoPointer::new([0; 32], 0)];
         let to_staked_account = network_ops_client
             .get_wallet_client()
             .new_staking_address(name, passphrase)
-            .unwrap();;
+            .unwrap();
 
         let attributes = StakedStateOpAttributes::new(0);
-        assert!(network_ops_client
-            .create_deposit_bonded_stake_transaction(
-                name,
-                passphrase,
-                inputs,
-                to_staked_account,
-                attributes,
-            )
-            .is_ok());
+
+        assert_eq!(
+            ErrorKind::InvalidInput,
+            network_ops_client
+                .create_deposit_bonded_stake_transaction(
+                    name,
+                    passphrase,
+                    inputs,
+                    to_staked_account,
+                    attributes,
+                )
+                .unwrap_err()
+                .kind()
+        );
     }
 
     #[test]
@@ -618,7 +723,7 @@ mod tests {
                 name,
                 passphrase,
                 &from_address,
-                Vec::new(),
+                vec![TxOut::new(ExtendedAddr::OrTree([0; 32]), Coin::unit())],
                 TxAttributes::new(171),
             )
             .unwrap();
@@ -743,7 +848,7 @@ mod tests {
                     &StakedStateAddress::BasicRedeem(RedeemAddress::from(&PublicKey::from(
                         &PrivateKey::new().unwrap()
                     ))),
-                    Vec::new(),
+                    vec![TxOut::new(ExtendedAddr::OrTree([0; 32]), Coin::unit())],
                     TxAttributes::new(171),
                 )
                 .unwrap_err()
@@ -838,7 +943,7 @@ mod tests {
 
         let wallet_client = DefaultWalletClient::new_read_only(storage.clone());
 
-        let tendermint_client = MockClient::default();
+        let tendermint_client = MockJailedClient::default();
         let network_ops_client = DefaultNetworkOpsClient::new(
             wallet_client,
             signer,
