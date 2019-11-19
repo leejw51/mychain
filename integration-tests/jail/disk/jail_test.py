@@ -164,7 +164,6 @@ def test_unjailing() :
     print("unjail test success")
 
 ############################################################################3
-assert False
 test_jailing()
 restore_wallets()
 create_addresses()
