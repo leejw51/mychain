@@ -16,7 +16,8 @@ services:
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
-      TENDERMINT_CMD: 'tendermint node --rpc.laddr=tcp://0.0.0.0:26657'
+      TENDERMINT_FLAG0: --rpc.laddr=tcp://0.0.0.0:26657
+      TENDERMINT_FLAG1:
   chain1:
     build: .
     volumes:
@@ -32,4 +33,5 @@ services:
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug    
-      TENDERMINT_CMD: 'tendermint node --p2p.persistent_peers "e04c6e7fcda7f3947179871053cec8de7b7a20cb@chain0:26656"'
+      TENDERMINT_FLAG0: --p2p.persistent_peers 
+      TENDERMINT_FLAG1: e04c6e7fcda7f3947179871053cec8de7b7a20cb@chain0:26656
