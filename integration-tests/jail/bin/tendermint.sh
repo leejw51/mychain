@@ -1,3 +1,4 @@
 #!/bin/bash
-tendermint node $TENDERMINT_FLAG
+echo "run tendermint= " $TENDERMINT_FLAG
+tendermint node -- $TENDERMINT_FLAG
 
