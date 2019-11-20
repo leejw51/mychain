@@ -6,7 +6,7 @@ RUN echo 'source /root/.cargo/env' >> /root/.docker_bashrc
 RUN apt-get update
 RUN rm -rf /var/lib/apt/lists/*
 RUN apt update
-RUN apt install -y --no-install-recommends whois wget curl python3 libssl-dev libcurl4-openssl-dev libelf-dev libdw-dev  gcc binutils-dev libc6-dev pkg-config build-essential openssh-server cmake libgflags-dev libzmq3-dev pkg-config libssl-dev libzmq3-dev  unzip  tmux 
+RUN apt install -y  whois wget curl python3 libssl-dev libcurl4-openssl-dev libelf-dev libdw-dev  gcc binutils-dev libc6-dev pkg-config build-essential openssh-server cmake libgflags-dev libzmq3-dev pkg-config libssl-dev libzmq3-dev  unzip  tmux 
 ENV SGX_MODE=SW
 ENV NETWORK_ID=AB
 ENV RUSTFLAGS=-Ctarget-feature=+aes,+ssse3
