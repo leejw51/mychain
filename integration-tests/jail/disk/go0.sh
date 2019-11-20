@@ -7,5 +7,5 @@ cp ./config0/* /root/.tendermint/config
 source ./go_common.sh
 echo "OK"
 echo "launch"
-/root/disk/launch0.sh
+/root/disk/launch.sh
 sleep infinity
