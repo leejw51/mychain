@@ -13,6 +13,7 @@ nohup ./abci.sh  > abci.log &
 sleep 5
 
 echo "activate tendermint"
+echo "TENDERMIT FLAG=". $TENDERMINT_FLAG
 ./tendermint.sh  &
 sleep 5
 
