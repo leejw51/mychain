@@ -1,4 +1,4 @@
 #!/bin/bash
-echo "run tendermint= " $TENDERMINT_FLAG
-tendermint node -- $TENDERMINT_FLAG
+echo "run tendermint= " $TENDERMINT_CMD
+eval $TENDERMINT_CMD
 
