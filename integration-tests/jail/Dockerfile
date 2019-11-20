@@ -3,8 +3,8 @@ LABEL maintainer="Crypto.com"
 
 RUN echo 'source /opt/sgxsdk/environment' >> /root/.docker_bashrc 
 RUN echo 'source /root/.cargo/env' >> /root/.docker_bashrc
-RUN apt-get update
 RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update
 RUN apt update
 RUN apt install -y  whois wget curl python3 libssl-dev libcurl4-openssl-dev libelf-dev libdw-dev  gcc binutils-dev libc6-dev pkg-config build-essential openssh-server cmake libgflags-dev libzmq3-dev pkg-config libssl-dev libzmq3-dev  unzip  tmux 
 ENV SGX_MODE=SW
