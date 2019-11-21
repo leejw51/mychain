@@ -101,23 +101,23 @@ def unjail(name, passphrase, address):
 
 
 def check_validators() :
-	try: 
-		x= requests.get('{}/validators'.format(server))
-		data =len(x.json()["result"]["validators"])
-		return data
-	except requests.ConnectionError:
- 		return 0
-	except:
-		assert False
+    try: 
+        x= requests.get('{}/validators'.format(server))
+        data =len(x.json()["result"]["validators"])
+        return data
+    except requests.ConnectionError:
+         return 0
+    except:
+        assert False
 
 def wait_for_ready(count) :
-	while True:
-		validators=check_validators()
-		print("{}  current validators={}  waiting for validators={}".format(datetime.datetime.now(),validators, count))
-		if count== validators :
-			print("validators ready")
-			break
-		time.sleep(60)
+    while True:
+        validators=check_validators()
+        print("{}  current validators={}  waiting for validators={}".format(datetime.datetime.now(),validators, count))
+        if count== validators :
+            print("validators ready")
+            break
+        time.sleep(60)
 
 
 def test_jailing() :
