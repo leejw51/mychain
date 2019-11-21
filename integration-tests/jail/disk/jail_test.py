@@ -120,7 +120,7 @@ def wait_for_ready(count) :
         validators=check_validators()
         if remain_time< 0 :
             assert False
-        print("{}  remain time={}  current validators={}  waiting for validators={}".format(datetime.datetime.now(), remain_time, validators, count))
+        print("{}  remain time={1:.2f}  current validators={}  waiting for validators={}".format(datetime.datetime.now(), remain_time, validators, count))
         if count== validators :
             print("validators ready")
             break
