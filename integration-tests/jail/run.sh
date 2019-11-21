@@ -1,11 +1,7 @@
 #!/bin/bash
 docker-compose up -d --build
 echo "docker compose ok"
-#echo "wait for docker setting up"
-#sleep 1800
-#echo "done"
-pip3 install docker
-python3 ./disk/jail_test.py
+nix-shell -p python37Packages.docker --run "python3 ./disk/jail_test.py"
 ret=$?
 if [ $ret -ne 0 ]; then
     exit -1
