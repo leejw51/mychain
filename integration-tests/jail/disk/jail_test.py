@@ -111,7 +111,7 @@ def check_validators() :
         assert False
 
 def wait_for_ready(count) :
-    initial_time=     time.  time() # in seconds
+    initial_time=time.time() # in seconds
     MAX_TIME = 3600
     while True:
         current_time= time.time()
@@ -153,15 +153,23 @@ def test_jailing() :
 
 
 def test_unjailing() :
+    initial_time=time.time() # in seconds
     print("test unjailing")
     wait_for_ready(1)
 
     count=2
+    MAX_TIME = 3600  
     while True:
+        current_time= time.time()
+        elasped_time= current_time - initial_time
+        remain_time = MAX_TIME - elasped_time
+        validators=check_validators()
+        if remain_time< 0 :
+            assert False
         unjail("a","1", "0xe5b4b42406a061752c78bf5c4d6d6fccca0b575f")
         state= get_staking_state("a","1", "0xe5b4b42406a061752c78bf5c4d6d6fccca0b575f")
         punishment=state["punishment"] 
-        print("punishment {}".format(punishment))
+        print("{0}  remain time={1:.2f}  punishment {2}".format(datetime.datetime.now(), remain_time, punishment))
         if punishment== None :
             print("unjailed!!")
             break
