@@ -111,9 +111,16 @@ def check_validators() :
         assert False
 
 def wait_for_ready(count) :
+    initial_time=     time.  time() # in seconds
+    MAX_TIME = 3600
     while True:
+        current_time= time.time()
+        elasped_time= current_time - initial_time
+        remain_time = MAX_TIME - elasped_time
         validators=check_validators()
-        print("{}  current validators={}  waiting for validators={}".format(datetime.datetime.now(),validators, count))
+        if remain_time< 0 :
+            assert False
+        print("{}  remain time={}  current validators={}  waiting for validators={}".format(datetime.datetime.now(), remain_time, validators, count))
         if count== validators :
             print("validators ready")
             break
