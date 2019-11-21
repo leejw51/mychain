@@ -30,6 +30,11 @@ steps:
   - mkdir bin
   - export PATH="$PATH:$PWD/bin"
   - echo "OK"
+  - export NIX_REMOTE=daemon
+  - export PATH="$PATH:/nix/var/nix/profiles/default/bin/"
+  - export DOCKER_COMPOSE_PREFIX="${DRONE_BRANCH}"
+  - . /usr/local/etc/profile.d/nix.sh
+  - . /opt/intel/sgxsdk/sgxsdk/environmentsssss 
   - cd integration-tests/jail
   - ./run.sh
 
