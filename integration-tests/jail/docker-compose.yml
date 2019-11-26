@@ -17,6 +17,7 @@ services:
       RUST_LOG: debug
       TENDERMINT_FLAG0: --rpc.laddr=tcp://0.0.0.0:26657
       TENDERMINT_FLAG1:
+      APP_HASH:  $APP_HASH
   chain1:
     build: .
     volumes:
@@ -30,4 +31,5 @@ services:
       RUST_BACKTRACE: 1
       RUST_LOG: debug    
       TENDERMINT_FLAG0: --p2p.persistent_peers 
-      TENDERMINT_FLAG1: 74e3c34ac4abf53754cca7869e6410a0a36528f5@chain0:26656
+      TENDERMINT_FLAG1: $SEED_ID@chain0:26656
+      APP_HASH: $APP_HASH

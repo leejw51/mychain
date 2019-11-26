@@ -1,4 +1,5 @@
 #!/bin/bash
+. run_test_env.sh
 docker-compose up 
 echo "docker compose ok"
 nix-shell -p python37Packages.docker --run "python3 ./disk/jail_test.py"
