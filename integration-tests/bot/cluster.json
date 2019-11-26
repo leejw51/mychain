@@ -1,0 +1,36 @@
+{
+    "genesis_time": "2019-11-20T08:56:48.618137Z",
+    "rewards_pool": 0,
+    "nodes": [
+        {
+            "name": "node0",
+            "mnemonic": "cheese core verb chicken hood ankle soap jaguar wrestle bargain elder only giant fold yellow",
+            "validator_seed": "4e04bfd4cb352e87b2bbf4706a4be5738b9196a1b5ba19cd0be677797441a5c3",
+            "node_seed": "2b86254d351744749e90ba51924865a4ff3c31caf45aa1a314d8d0bc7b347274",
+            "bonded_coin": 2500000000000000000,
+            "unbonded_coin": 2500000000000000000,
+            "base_port": 26650
+        },
+        {
+            "name": "node1",
+            "mnemonic": "zoo jacket eager soup sunny awkward risk scene soul power when unfair rifle slow crystal",
+            "validator_seed": "27fb4d7c9a0eebf9161a31a02977727de2e710be5254929d4fe995b5b0d3105d",
+            "node_seed": "0073c6666c3a6736746fb6022c65d4d2e5b4a419acb300e373d08edc9654ee32",
+            "bonded_coin": 2500000000000000000,
+            "unbonded_coin": 2500000000000000000,
+            "base_port": 26660
+        }
+    ],
+    "config_patch": [
+        {
+            "op": "replace",
+            "path": "/initial_fee_policy/base_fee",
+            "value": "0.0"
+        },
+        {
+            "op": "replace",
+            "path": "/initial_fee_policy/per_byte_fee",
+            "value": "0.0"
+        }
+    ]
+}
