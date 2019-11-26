@@ -1,3 +1,4 @@
+README.rst
 chainbot.py
 setup.py
 crypto_chain_bot.egg-info/PKG-INFO

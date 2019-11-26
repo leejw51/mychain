@@ -25,7 +25,7 @@ SGX_MODE = 'HW' if SGX_DEVICE else 'SW'
 
 CHAIN_TX_ENCLAVE_DOCKER_IMAGE = config('CHAIN_TX_ENCLAVE_DOCKER_IMAGE',
                                        'integration-tests-chain-tx-enclave')
-CHAIN_ID = config('CHAIN_ID', 'test-chain-y3m1e6-AB')
+CHAIN_ID = config('CHAIN_ID', 'test-ab')
 
 DEVUTIL_CMD = Path('dev-utils')
 CLIENT_CMD = Path('client-cli')
