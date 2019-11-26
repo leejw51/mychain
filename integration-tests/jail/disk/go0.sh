@@ -1,8 +1,7 @@
 #!/bin/bash
 service ssh start
+source /root/disk/go_common.sh
 cd /root/disk
-mkdir /root/chain
 cp ./config0/* /root/.tendermint/config
-source ./go_common.sh
 /root/disk/launch.sh
 sleep infinity

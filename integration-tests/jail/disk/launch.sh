@@ -1,5 +1,7 @@
 #!/bin/bash
 export RUST_LOG=info
+cd /root/bin 
+
 echo "activate aesm"
 ./aesm.sh 
 sleep 1
