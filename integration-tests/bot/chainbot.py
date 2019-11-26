@@ -497,12 +497,20 @@ class CLI:
             ],
         }
         print(json.dumps(cfg, indent=4))
+        return cfg
 
     def prepare(self, spec=None):
         '''Prepare tendermint testnet based on specification
         :param spec: Path of specification file, [default: stdin]
         '''
         cfg = json.load(open(spec) if spec else sys.stdin)
+        asyncio.run(init_cluster(cfg))
+        print('Prepared succesfully', ROOT_PATH)
+
+    def prepare_cfg(self, cfg, spec=None):
+        '''Prepare tendermint testnet based on specification
+        :param spec: Path of specification file, [default: stdin]
+        '''
         asyncio.run(init_cluster(cfg))
         print('Prepared succesfully', ROOT_PATH)
 
