@@ -6,11 +6,11 @@ rm -rf /root/bin/.enclave
 rm -rf /root/bin/.cro-storage
 rm -rf /root/bin/.storage
 rm -rf /enclave-storage
-echo "clear disk"
-/root/bin/tendermint unsafe_reset_all
 echo "copy binaries"
 mkdir /root/bin
 cp /root/disk/bin/* /root/bin
+echo "clear disk"
+/root/bin/tendermint unsafe_reset_all
 sleep 2 
 source /root/disk/prepare.sh
 source /opt/sgxsdk/environment
