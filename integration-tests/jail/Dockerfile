@@ -1,6 +1,5 @@
 FROM baiduxlab/sgx-rust:1804-1.0.9
 LABEL maintainer="Crypto.com"
-
 RUN echo 'source /opt/sgxsdk/environment' >> /root/.docker_bashrc 
 RUN echo 'source /root/.cargo/env' >> /root/.docker_bashrc
 RUN rm -rf /var/lib/apt/lists/*
@@ -20,8 +19,5 @@ ENV LD_LIBRARY_PATH=$HOME/lib
 ENV PKG_CONFIG_PATH=$HOME/lib/pkgconfig
 COPY ./ssh /root/.ssh
 COPY ./bin /root/bin
-RUN cd /root/bin && wget https://github.com/tendermint/tendermint/releases/download/v0.32.6/tendermint_v0.32.6_linux_amd64.zip
-RUN cd /root/bin && unzip ./tendermint_v0.32.6_linux_amd64.zip
-RUN /root/bin/tendermint unsafe_reset_all
 CMD ["sleep","infinity"]
 
