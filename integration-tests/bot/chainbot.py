@@ -496,8 +496,7 @@ class CLI:
                 {'op': 'replace', 'path': '/initial_fee_policy/per_byte_fee', 'value': '0.0'},
             ],
         }
-        #print(json.dumps(cfg, indent=4))
-        return cfg
+        print(json.dumps(cfg, indent=4))
 
     def prepare(self, spec=None):
         '''Prepare tendermint testnet based on specification
@@ -507,9 +506,6 @@ class CLI:
         asyncio.run(init_cluster(cfg))
         print('Prepared succesfully', ROOT_PATH)
 
-    def prepare_cfg(self, cfg):
-        asyncio.run(init_cluster(cfg))
-        print('Prepared succesfully', ROOT_PATH)
 
 if __name__ == '__main__':
     fire.Fire(CLI())
