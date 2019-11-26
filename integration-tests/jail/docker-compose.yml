@@ -20,7 +20,7 @@ services:
   chain1:
     build: .
     volumes:
-      - ../..:/root/chain_src
+      - ../..:/root/chain_src 
       - ./disk:/root/disk
     image: chain_test1
     ports:
@@ -30,4 +30,4 @@ services:
       RUST_BACKTRACE: 1
       RUST_LOG: debug    
       TENDERMINT_FLAG0: --p2p.persistent_peers 
-      TENDERMINT_FLAG1: e04c6e7fcda7f3947179871053cec8de7b7a20cb@chain0:26656
+      TENDERMINT_FLAG1: 74e3c34ac4abf53754cca7869e6410a0a36528f5@chain0:26656

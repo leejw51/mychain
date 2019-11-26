@@ -1,95 +1,98 @@
 {
-  "genesis_time": "2019-10-23T07:26:34.783271158Z",
-  "chain_id": "test-ab",
-  "consensus_params": {
-    "block": {
-      "max_bytes": "22020096",
-      "max_gas": "-1",
-      "time_iota_ms": "1000"
-    },
-    "evidence": {
-      "max_age": "100000"
-    },
-    "validator": {
-      "pub_key_types": [
-        "ed25519"
-      ]
-    }
-  },
-  "validators": [
- {
-      "address": "711FDCF5A083DEA7275AAD315B342951E8BF2DA2",
-      "pub_key": { 
-        "type": "tendermint/PubKeyEd25519",
-        "value": "zVbAlxXktHidGs1c6pA01IIxLqm0DIZiqHGZqeWIjB0="
-      },
-      "power": "37500000000",
-      "name": "test0"
-},
-{
-      "address": "45EE33888DC8CCBB3BA76154D3B39CEFC2BD2786",
-      "pub_key": { 
-        "type": "tendermint/PubKeyEd25519",
-        "value": "6hYXhMHZpWP0yz+5+aT+wLT2deJsGcyOLR/h+o7CZS8="
-      },
-      "power": "12500000000",
-      "name": "test1"
-}
-    
-  ],
-
-  "app_hash": "C8B1101B2FDF6684046C4F0E6BEE9FE595433AAC5200A3EFFD7CC77A9FD27E7C",
-  "app_state": {
-    "rewards_pool": "5000000000000000000",
-    "distribution": {
-      "0x83fe11feb0887183eb62c30994bdd9e303497e3d": [
-        "Bonded",
-        "3750000000000000000"
-      ],
-      "0xe5b4b42406a061752c78bf5c4d6d6fccca0b575f": [
-        "Bonded",
-        "1250000000000000000"
-      ]
-    },
-    "network_params": {
-      "initial_fee_policy": {
-        "constant": 1100,
-        "coefficient": 1250
-      },
-      "required_council_node_stake": "250000000000000000",
-      "unbonding_period": 60,
-      "jailing_config": {
-        "jail_duration": 600,
-        "block_signing_window": 100,
-        "missed_block_threshold": 50
-      },
-      "slashing_config": {
-        "liveness_slash_percent": "0.100",
-        "byzantine_slash_percent": "0.200",
-        "slash_wait_period": 300
-      },
-      "max_validators": 50
-    },
-    "council_nodes": {
-      "0x83fe11feb0887183eb62c30994bdd9e303497e3d": [
-        "test0",
-        "security0@example.com",
-        {
-          "consensus_pubkey_type": "Ed25519",
-          "consensus_pubkey_b64": "zVbAlxXktHidGs1c6pA01IIxLqm0DIZiqHGZqeWIjB0="
+    "genesis_time": "2019-11-20T08:56:48.618137Z",
+    "chain_id": "test-ab",
+    "consensus_params": {
+        "block": {
+            "max_bytes": "22020096",
+            "max_gas": "-1",
+            "time_iota_ms": "1000"
+        },
+        "evidence": {
+            "max_age": "100000"
+        },
+        "validator": {
+            "pub_key_types": [
+                "ed25519"
+            ]
         }
-      ],
-      "0xe5b4b42406a061752c78bf5c4d6d6fccca0b575f": [
-        "test1",
-        "security1@example.com",
+    },
+    "validators": [
         {
-          "consensus_pubkey_type": "Ed25519",
-          "consensus_pubkey_b64": "6hYXhMHZpWP0yz+5+aT+wLT2deJsGcyOLR/h+o7CZS8="
+            "address": "ED74821CC9410A78FB8118F5E20FC3E692F1A7FE",
+            "pub_key": {
+                "type": "tendermint/PubKeyEd25519",
+                "value": "mZln6/gGiZflPulK213iGnmf/hdSFenMoGxXeQOo7Fc="
+            },
+            "power": "25000000000",
+            "name": "node0"
+        },
+        {
+            "address": "E00889D2CD8475279D17C2EA87B929A9CAD499AB",
+            "pub_key": {
+                "type": "tendermint/PubKeyEd25519",
+                "value": "TQBjAGXV83AcKRuY3Wt23IfktCFAwkAp/yBepoyI3l8="
+            },
+            "power": "25000000000",
+            "name": "node1"
         }
-      ]
+    ],
+    "app_hash": "53E692113CBF02044B32BFCADC55D7DEC27E1DBAA2912FBC1B6D2BC0729C7A91",
+    "app_state": {
+        "rewards_pool": "0",
+        "distribution": {
+            "0x03bc647601383f0654dbc6d8dc982cde9987f60a": [
+                "UnbondedFromGenesis",
+                "2500000000000000000"
+            ],
+            "0xb14598c5537884bdd4b00cf2c70b8ac64ebe687e": [
+                "UnbondedFromGenesis",
+                "2500000000000000000"
+            ],
+            "0xe15a6b9055ad67d1a5df9e54396334e7129aa06f": [
+                "Bonded",
+                "2500000000000000000"
+            ],
+            "0xe7d79928d1711905afa80d6386ce2432197c5ff4": [
+                "Bonded",
+                "2500000000000000000"
+            ]
+        },
+        "network_params": {
+            "initial_fee_policy": {
+                "constant": 0,
+                "coefficient": 0
+            },
+            "required_council_node_stake": "1",
+            "unbonding_period": 60,
+            "jailing_config": {
+                "jail_duration": 86400,
+                "block_signing_window": 100,
+                "missed_block_threshold": 50
+            },
+            "slashing_config": {
+                "liveness_slash_percent": "0.100",
+                "byzantine_slash_percent": "0.200",
+                "slash_wait_period": 10800
+            },
+            "max_validators": 50
+        },
+        "council_nodes": {
+            "0xe15a6b9055ad67d1a5df9e54396334e7129aa06f": [
+                "node1",
+                "node1@example.com",
+                {
+                    "consensus_pubkey_type": "Ed25519",
+                    "consensus_pubkey_b64": "TQBjAGXV83AcKRuY3Wt23IfktCFAwkAp/yBepoyI3l8="
+                }
+            ],
+            "0xe7d79928d1711905afa80d6386ce2432197c5ff4": [
+                "node0",
+                "node0@example.com",
+                {
+                    "consensus_pubkey_type": "Ed25519",
+                    "consensus_pubkey_b64": "mZln6/gGiZflPulK213iGnmf/hdSFenMoGxXeQOo7Fc="
+                }
+            ]
+        }
     }
-  }
-  
-  
-
 }
