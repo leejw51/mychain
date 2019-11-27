@@ -420,9 +420,15 @@ async def init_cluster(cfg):
 
     node_cfg= cfg['nodes'][0]
     info= {"app_hash":app_hash, "seed_id":  SigningKey(node_cfg['node_seed']).validator_address().lower()}
+    # write
     json.dump(info,
                 open(ROOT_PATH / Path('info.json'), 'w'),
                 indent=4)
+    # write nodes
+    json.dump(cfg,
+                open(ROOT_PATH / Path('nodes_info.json'), 'w'),
+                indent=4)
+
     # write
     f = open("run_test_env.sh", "w")
     f.write("export APP_HASH={}\n".format(info["app_hash"]))

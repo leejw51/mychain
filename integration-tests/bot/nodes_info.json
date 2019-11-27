@@ -1,0 +1,44 @@
+{
+    "genesis_time": "2019-11-20T08:56:48.618137Z",
+    "rewards_pool": 0,
+    "nodes": [
+        {
+            "name": "node0",
+            "mnemonic": "pistol panic month fabric spray prepare mobile couple crisp lunch track turn ketchup toilet swear",
+            "validator_seed": "dc79e6ca6583101a64e60cccb05bbf468363b33ad012a14216256acd310247b8",
+            "node_seed": "bdeffa9acd423414076082fa1c1cf1f87121a7b46e22dc91269ed836643ba0b9",
+            "bonded_coin": 3750000000000000000,
+            "unbonded_coin": 1250000000000000000,
+            "base_port": 26650,
+            "staking": [
+                "0xcb24612a7b8fef807129b89d0a1d30662872d4dc",
+                "0xe0c5dff8e77283dfc5841fd3f2217d4e461c9957"
+            ]
+        },
+        {
+            "name": "node1",
+            "mnemonic": "grunt genre shadow buzz work trust trick twice snow script remove sister plate version define",
+            "validator_seed": "10ec1964292fbfb91fed1ca4d14cd037610ce17adbad827f0ce39ee3120586cd",
+            "node_seed": "215ce6d6dbac6ff631393cc9f599d63cd90fa293780dfed1e3829d142ca91369",
+            "bonded_coin": 1250000000000000000,
+            "unbonded_coin": 3750000000000000000,
+            "base_port": 26660,
+            "staking": [
+                "0xb51a88a860db4154882ee244d9d25a096d6c9369",
+                "0xdfe0482bf2bc9e1ea79812161336bd5ffce89447"
+            ]
+        }
+    ],
+    "config_patch": [
+        {
+            "op": "replace",
+            "path": "/initial_fee_policy/base_fee",
+            "value": "0.0"
+        },
+        {
+            "op": "replace",
+            "path": "/initial_fee_policy/per_byte_fee",
+            "value": "0.0"
+        }
+    ]
+}
