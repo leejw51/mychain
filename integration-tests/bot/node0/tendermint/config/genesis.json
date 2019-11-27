@@ -1,6 +1,6 @@
 {
     "genesis_time": "2019-11-20T08:56:48.618137Z",
-    "chain_id": "test-chain-y3m1e6-AB",
+    "chain_id": "test-ab",
     "consensus_params": {
         "block": {
             "max_bytes": "22020096",
@@ -18,43 +18,43 @@
     },
     "validators": [
         {
-            "address": "694DAEF9DDF18C2FDF0FEA098EFEA6C2EAF5EF88",
+            "address": "2EBAD4B5860184B7D90626B65539837809A4FD28",
             "pub_key": {
                 "type": "tendermint/PubKeyEd25519",
-                "value": "kEepSxlZ1GjspJi7yJHCTdw0xRXOBxTlMGXF3GIceYE="
+                "value": "mfZtbuvHiEyrPTHPROUw+Qc7ALm5EW9cuvp9klj/qPU="
             },
-            "power": "25000000000",
+            "power": "37500000000",
             "name": "node0"
         },
         {
-            "address": "7D2424BDE100C22DDCFE57359FA7214A8F4FB1F5",
+            "address": "6A4F0D21D5EB0B2F7EA81FDBB1711A287308E507",
             "pub_key": {
                 "type": "tendermint/PubKeyEd25519",
-                "value": "iNoAi9Rl7mM8xfQjODpvmuuZerycvKG/k7YGKvjSrSk="
+                "value": "3FXxRpSgpLxFSboJFYnDVG+l8mTmB1ByMbmcWPCsPdM="
             },
-            "power": "25000000000",
+            "power": "12500000000",
             "name": "node1"
         }
     ],
-    "app_hash": "3A76E0E2220DBA7D07742F29F625E70EC9FA79080A38C01A2A9AA70BBA305679",
+    "app_hash": "9A156CF2A7A81AD4DC1659776B5464EBEF33190A3A2299B2EA6DE12CC0F54273",
     "app_state": {
         "rewards_pool": "0",
         "distribution": {
-            "0x22991cb906c957bb39a87a9e66755efd1904d5e0": [
+            "0x4163ec4008bc55771faa8508c98f07fd4be80eb9": [
                 "UnbondedFromGenesis",
-                "2500000000000000000"
+                "3750000000000000000"
             ],
-            "0x6a07d8a92b1dd90857894da853d769d4c681d5fe": [
-                "Bonded",
-                "2500000000000000000"
-            ],
-            "0x9a3f3f7139b56cf7ab8bbc6bf8a6dfcc96291067": [
-                "Bonded",
-                "2500000000000000000"
-            ],
-            "0xdd8ea41d3e44f6d984d4b9245358d656e5d71b68": [
+            "0x6391b2897f8ae2819d1b1cde7770d1d127737de4": [
                 "UnbondedFromGenesis",
-                "2500000000000000000"
+                "1250000000000000000"
+            ],
+            "0x66309e1ba1ba069daf746bcf3230aeb10abd9183": [
+                "Bonded",
+                "1250000000000000000"
+            ],
+            "0x8aea3af8620b10236ba63fac74c7adc5227b74f0": [
+                "Bonded",
+                "3750000000000000000"
             ]
         },
         "network_params": {
@@ -65,32 +65,32 @@
             "required_council_node_stake": "1",
             "unbonding_period": 60,
             "jailing_config": {
-                "jail_duration": 86400,
-                "block_signing_window": 100,
-                "missed_block_threshold": 50
+                "jail_duration": 86,
+                "block_signing_window": 20,
+                "missed_block_threshold": 10
             },
             "slashing_config": {
                 "liveness_slash_percent": "0.100",
                 "byzantine_slash_percent": "0.200",
-                "slash_wait_period": 10800
+                "slash_wait_period": 10
             },
             "max_validators": 50
         },
         "council_nodes": {
-            "0x6a07d8a92b1dd90857894da853d769d4c681d5fe": [
+            "0x66309e1ba1ba069daf746bcf3230aeb10abd9183": [
                 "node1",
                 "node1@example.com",
                 {
                     "consensus_pubkey_type": "Ed25519",
-                    "consensus_pubkey_b64": "iNoAi9Rl7mM8xfQjODpvmuuZerycvKG/k7YGKvjSrSk="
+                    "consensus_pubkey_b64": "3FXxRpSgpLxFSboJFYnDVG+l8mTmB1ByMbmcWPCsPdM="
                 }
             ],
-            "0x9a3f3f7139b56cf7ab8bbc6bf8a6dfcc96291067": [
+            "0x8aea3af8620b10236ba63fac74c7adc5227b74f0": [
                 "node0",
                 "node0@example.com",
                 {
                     "consensus_pubkey_type": "Ed25519",
-                    "consensus_pubkey_b64": "kEepSxlZ1GjspJi7yJHCTdw0xRXOBxTlMGXF3GIceYE="
+                    "consensus_pubkey_b64": "mfZtbuvHiEyrPTHPROUw+Qc7ALm5EW9cuvp9klj/qPU="
                 }
             ]
         }

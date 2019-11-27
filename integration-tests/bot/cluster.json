@@ -4,18 +4,18 @@
     "nodes": [
         {
             "name": "node0",
-            "mnemonic": "cheese core verb chicken hood ankle soap jaguar wrestle bargain elder only giant fold yellow",
-            "validator_seed": "4e04bfd4cb352e87b2bbf4706a4be5738b9196a1b5ba19cd0be677797441a5c3",
-            "node_seed": "2b86254d351744749e90ba51924865a4ff3c31caf45aa1a314d8d0bc7b347274",
+            "mnemonic": "risk absent cup spike trash ostrich destroy never trash board already ticket scare camp prefer",
+            "validator_seed": "cf99942bf38dc5892ad33b1cfcb893f1ded3231846efcad8cb307b7db7f1b25c",
+            "node_seed": "45f51e0f5e56a3ffa901979c7a1b7e8345a0c9fc71cf1e053214642c70e9ec7e",
             "bonded_coin": 2500000000000000000,
             "unbonded_coin": 2500000000000000000,
             "base_port": 26650
         },
         {
             "name": "node1",
-            "mnemonic": "zoo jacket eager soup sunny awkward risk scene soul power when unfair rifle slow crystal",
-            "validator_seed": "27fb4d7c9a0eebf9161a31a02977727de2e710be5254929d4fe995b5b0d3105d",
-            "node_seed": "0073c6666c3a6736746fb6022c65d4d2e5b4a419acb300e373d08edc9654ee32",
+            "mnemonic": "measure girl alcohol tip describe hope advice assault plug pyramid muscle nut slice drastic arrange",
+            "validator_seed": "3d7982c716d6b584a55dfcc487b36bd1f3f1d79a2139c321f6f412bb9231075b",
+            "node_seed": "e8c3618e45f2483b7ab7cbe00452936df4cd1f0c8025d84a0f6c954dfdb278bc",
             "bonded_coin": 2500000000000000000,
             "unbonded_coin": 2500000000000000000,
             "base_port": 26660
@@ -34,3 +34,4 @@
         }
     ]
 }
+
