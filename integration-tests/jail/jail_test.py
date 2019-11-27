@@ -139,7 +139,7 @@ class Program :
             if count== validators :
                 print("validators ready")
                 break
-            time.sleep(60)
+            time.sleep(10)
 
 
     def test_jailing(self) :
