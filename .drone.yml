@@ -29,8 +29,6 @@ steps:
   commands:
   - export NIX_REMOTE=daemon
   - export PATH="$PATH:/nix/var/nix/profiles/default/bin/"
-  - . /etc/profile.d/nix.sh 
-  - export DOCKER_COMPOSE_PREFIX="${DRONE_BRANCH}"
   - cd integration-tests/jail
   - ./run.sh
 
