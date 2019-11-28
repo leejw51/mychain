@@ -10,6 +10,7 @@ class Program :
         self.rpc = RPC()
         self.blockchain = Blockchain()
 
+        self.server="http://localhost:26657"
         # wallet a
         self.node0_address = ""
         self.node0_mnemonics= ""
@@ -65,12 +66,21 @@ class Program :
 
     def check_validators(self) :
         try: 
-            x=self.blockchain.validators()["validators"]
-            data =len(x)
-            #print("count={}  check_validators={}".format(data,x))
+            x= requests.get('{}/validators'.format(self.server))
+            data =len(x.json()["result"]["validators"])
             return data
-        except:
+        except requests.ConnectionError:
             return 0
+        except:
+            assert False
+
+    def check_validators_old(self) :
+        x=self.blockchain.validators()["validators"]
+        print("check validators")
+        data =len(x)
+        print("count={}  check_validators={}".format(data,x))
+        return data
+      
 
     def wait_for_ready(self,count) :
         initial_time=time.time() # in seconds
