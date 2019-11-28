@@ -4,8 +4,7 @@ name: default
 
 steps:
 - name: test
-  image: chain
-  pull: never
+  image: ubuntu
   commands:
   - export RUST_BACKTRACE=1
   - export RUSTFLAGS=-Ctarget-feature=+aes,+ssse3
