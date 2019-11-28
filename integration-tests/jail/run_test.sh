@@ -2,7 +2,7 @@
 . run_test_env.sh
 docker-compose up -d  
 echo "docker compose ok"
-nix-shell ./jail.nix  --run "export PASSPHRASE=1 && export PATH=$HOME/.local/bin:$PATH && pip install python-decouple --user && pip install jsonrpcclient --user && python3 ../bot/jail_test.py"
+nix-shell ./jail.nix  --run "export PASSPHRASE=1 && python3 ../bot/jail_test.py"
 ret=$?
 if [ $ret -ne 0 ]; then
     exit -1
