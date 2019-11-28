@@ -4,28 +4,28 @@
     "nodes": [
         {
             "name": "node0",
-            "mnemonic": "pistol panic month fabric spray prepare mobile couple crisp lunch track turn ketchup toilet swear",
-            "validator_seed": "dc79e6ca6583101a64e60cccb05bbf468363b33ad012a14216256acd310247b8",
-            "node_seed": "bdeffa9acd423414076082fa1c1cf1f87121a7b46e22dc91269ed836643ba0b9",
+            "mnemonic": "appear evolve false change huge chase clinic poverty blanket clean submit crouch high angle coach",
+            "validator_seed": "a519da7d1404834afde0e307384c9f0882a6bcd23b976cc4a35dd4e12af4845c",
+            "node_seed": "ded2ecdd9bc9a78b780751004b2d1def50591f4af517148fd77721da774b3dfc",
             "bonded_coin": 3750000000000000000,
             "unbonded_coin": 1250000000000000000,
             "base_port": 26650,
             "staking": [
-                "0xcb24612a7b8fef807129b89d0a1d30662872d4dc",
-                "0xe0c5dff8e77283dfc5841fd3f2217d4e461c9957"
+                "0xdee15ca8a01ae5e0a0ae183c40d153ce2e7b31eb",
+                "0x498aea78dccb64a7d06aacd68a64cb4d66645b8e"
             ]
         },
         {
             "name": "node1",
-            "mnemonic": "grunt genre shadow buzz work trust trick twice snow script remove sister plate version define",
-            "validator_seed": "10ec1964292fbfb91fed1ca4d14cd037610ce17adbad827f0ce39ee3120586cd",
-            "node_seed": "215ce6d6dbac6ff631393cc9f599d63cd90fa293780dfed1e3829d142ca91369",
+            "mnemonic": "reject arrow demand noise demise forward name stamp belt satoshi black lamp volume small dash",
+            "validator_seed": "bd7c4a7f1f755169b0d60271afe7d5b601b39aa019b03db040c80fb8f3535ae0",
+            "node_seed": "e6aa4e290c609a9e842df6da9cbd6518245545cf844d6e5c1beb69317353abe7",
             "bonded_coin": 1250000000000000000,
             "unbonded_coin": 3750000000000000000,
             "base_port": 26660,
             "staking": [
-                "0xb51a88a860db4154882ee244d9d25a096d6c9369",
-                "0xdfe0482bf2bc9e1ea79812161336bd5ffce89447"
+                "0x5585810c87b3a71a83d91416a9a37f3311782106",
+                "0x7f32de7ec9a8c3df2a5eef794cfefee57ad8cecd"
             ]
         }
     ],
