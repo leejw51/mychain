@@ -39,63 +39,17 @@ class Program :
 
 
     def get_staking_state(self,name, passphrase, addr):
-        q = {
-            "method": "staking_state",
-            "jsonrpc": "2.0",
-            "params": [{
-                "name": name,
-                "passphrase": passphrase
-            }, addr],
-            "id": "staking_state"
-        }
-        data = json.dumps(q)
-        response = requests.post(self.client_rpc, headers=self.headers, data=data)
-        return response.json()["result"]
-
-
-
+        return self.rpc.staking.state(addr, name)
+       
 
     def create_staking_address(self,name, passphrase):
-        q = {
-            "method": "wallet_createStakingAddress",
-            "jsonrpc": "2.0",
-            "params": [{
-                "name": name,
-                "passphrase": passphrase
-            }],
-            "id": "wallet_createStakingAddress"
-        }
-        data = json.dumps(q)
-        response = requests.post(self.client_rpc, headers=self.headers, data=data)
-
-
-    def restore_wallet(self,name, passphrase, mnemonics):
-        q = {
-            "method": "wallet_restore",
-            "jsonrpc": "2.0",
-            "params": [{
-                "name": name,
-                "passphrase": passphrase
-            }, mnemonics],
-            "id": "wallet_restore_hd"
-        }
-        data = json.dumps(q)
-        response = requests.post(self.client_rpc, headers=self.headers, data=data)
-        print("restore wallet {}".format(name), response.json())
-
+        return self.rpc.address.create(name,'staking')
+       
     def restore_wallets(self):
         print("restore wallets")
         self.rpc.wallet.restore(self.node0_mnemonics, "a")
-        self.rpc.wallet.restore(self.node0_mnemonics, "b")
-        self.restore_wallet(
-            "a", "1",
-            self.node0_mnemonics
-        )
-        self.restore_wallet(
-            "b", "1",
-            self.node1_mnemonics
-        )
-
+        self.rpc.wallet.restore(self.node1_mnemonics, "b")
+            
 
     def create_addresses(self):
         self.create_staking_address("a", "1")
@@ -105,20 +59,10 @@ class Program :
         
 
     def unjail(self,name, passphrase, address):
-        q = {
-            "method": "staking_unjail",
-            "jsonrpc": "2.0",
-            "params": [{
-                "name": name,
-                "passphrase": passphrase
-            }, address],
-            "id": "staking_unjail"
-        }
-        data = json.dumps(q)
-        response = requests.post(self.client_rpc, headers=self.headers, data=data)
-        print(response.json())
-        return response.json()
-
+        try:
+            return self.rpc.staking.unjail(address, name)
+        except :
+            print("unjail fail")
 
     def check_validators(self) :
         try: 
@@ -188,6 +132,7 @@ class Program :
                 assert False
             self.unjail("b","1", self.node1_address)
             state= self.get_staking_state("b","1", self.node1_address)
+            print("state {}".format(state))
             punishment=state["punishment"] 
             print("{0}  remain time={1:.2f}  punishment {2}".format(datetime.datetime.now(), remain_time, punishment))
             if punishment== None :
@@ -200,10 +145,13 @@ class Program :
 
     ############################################################################3
     def main (self) :
-        #self.test_jailing()
-        self.restore_wallets()
-        #self.create_addresses()
-        #self.test_unjailing()
+        self.test_jailing()
+        try :
+            self.restore_wallets()
+        except:
+            print("wallet already exists")
+        self.create_addresses()
+        self.test_unjailing()
 
 
     def read_info(self):

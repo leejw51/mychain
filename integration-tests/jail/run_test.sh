@@ -1,8 +1,8 @@
 #!/bin/bash
 . run_test_env.sh
-docker-compose up -d  
+docker-compose up   
 echo "docker compose ok"
-nix-shell ./jail.nix  --run "pip install python-decouple --user && python3 jail_test.py"
+nix-shell ./jail.nix  --run "pip install python-decouple --user && python3 ../bot/jail_test.py"
 ret=$?
 if [ $ret -ne 0 ]; then
     exit -1
