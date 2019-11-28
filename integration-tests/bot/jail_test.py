@@ -4,10 +4,11 @@ import json
 import requests
 import datetime
 import time
-from chainrpc import RPC
+from chainrpc import RPC, Blockchain
 class Program :
     def __init__(self) :
         self.rpc = RPC()
+        self.blockchain = Blockchain()
 
         # wallet a
         self.node0_address = ""
@@ -16,8 +17,6 @@ class Program :
         # wallet b
         self.node1_address = ""
         self.node1_mnemonics=""
-        self.server="http://localhost:26657"
-        self.client_rpc= "http://localhost:9981"
         self.headers = {
             'Content-Type': 'application/json',
         }
@@ -66,8 +65,9 @@ class Program :
 
     def check_validators(self) :
         try: 
-            x= requests.get('{}/validators'.format(self.server))
-            data =len(x.json()["result"]["validators"])
+            x=self.blockchain.validators()["validators"]
+            data =len(x)
+            #print("count={}  check_validators={}".format(data,x))
             return data
         except requests.ConnectionError:
             return 0
