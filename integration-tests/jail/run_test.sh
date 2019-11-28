@@ -1,6 +1,6 @@
 #!/bin/bash
 . run_test_env.sh
-docker-compose up   
+docker-compose up -d  
 echo "docker compose ok"
 nix-shell ./jail.nix  --run "export PASSPHRASE=1 && export PATH=$HOME/.local/bin:$PATH && pip install python-decouple --user && pip install jsonrpcclient --user && python3 ../bot/jail_test.py"
 ret=$?

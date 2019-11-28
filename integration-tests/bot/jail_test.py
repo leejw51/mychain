@@ -69,10 +69,8 @@ class Program :
             data =len(x)
             #print("count={}  check_validators={}".format(data,x))
             return data
-        except requests.ConnectionError:
-            return 0
         except:
-            assert False
+            return 0
 
     def wait_for_ready(self,count) :
         initial_time=time.time() # in seconds
