@@ -14,5 +14,5 @@ sleep 2
 echo "preparing test"
 sleep 5
 # test
-. ./run_test.sh
+#. ./run_test.sh
 
