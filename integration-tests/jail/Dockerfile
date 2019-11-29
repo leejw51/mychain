@@ -17,7 +17,8 @@ ENV APP_PORT=25933
 ENV TX_ENCLAVE_STORAGE=/enclave-storage
 ENV LD_LIBRARY_PATH=$HOME/lib
 ENV PKG_CONFIG_PATH=$HOME/lib/pkgconfig
-COPY ./ssh /root/.ssh
-COPY ./bin /root/bin
+#COPY ./ssh /root/.ssh
+#COPY ./bin /root/bin
+RUN mkdir /root/bin
 CMD ["sleep","infinity"]
 
