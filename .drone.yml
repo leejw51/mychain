@@ -26,8 +26,6 @@ platform:
 steps:
 - name: integration-tests
   commands:
-  - export NIX_REMOTE=daemon
-  - export PATH="$PATH:/nix/var/nix/profiles/default/bin/"
   - cd integration-tests/jail
   - ./run.sh
 
