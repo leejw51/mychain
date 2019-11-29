@@ -2,6 +2,7 @@
 echo "setup"
 sleep 1
 
+. /etc/profile.d/nix.sh
 nix-shell ./jail.nix  --run "export PASSPHRASE=1 && python3 ../bot/make.py"
 cp ./node0/tendermint/config/genesis.json ./disk/config0/
 cp ./node0/tendermint/config/node_key.json ./disk/config0/
