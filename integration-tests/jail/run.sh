@@ -1,6 +1,6 @@
 #!/bin/bash
 source /etc/profile.d/nix.sh
-#. ./run_compile.sh
+. ./run_compile.sh
 
 echo "hello"
 pwd
@@ -15,5 +15,5 @@ sleep 2
 echo "preparing test"
 sleep 5
 # test
-#. ./run_test.sh
+. ./run_test.sh
 
