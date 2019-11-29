@@ -79,6 +79,8 @@ stdenv.mkDerivation rec {
     (python37.buildEnv.override {
       ignoreCollisions = true;
       extraLibs = with python37Packages; [
+         _apply_defaults 
+         jsonschema
          pip
          docker
          setuptools
