@@ -4,13 +4,13 @@ source /etc/profile.d/nix.sh
 
 echo "hello"
 pwd
-export PATH=$(pwd)/disk/bin
+export PATH=$(pwd)/disk/bin:$PATH
 hello 
 
 echo "setup"
 sleep 2
 #setup
-#. ./run_setup.sh
+. ./run_setup.sh
 
 echo "preparing test"
 sleep 5
