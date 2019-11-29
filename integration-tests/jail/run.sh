@@ -9,7 +9,7 @@ $(pwd)/disk/bin/hello
 echo "setup"
 sleep 2
 #setup
-. ./run_setup.sh
+#. ./run_setup.sh
 
 echo "preparing test"
 sleep 5
