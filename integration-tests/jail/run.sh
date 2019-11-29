@@ -1,5 +1,4 @@
 #!/bin/bash
-source ~/.nix-profile/etc/profile.d/nix.sh
 source /etc/profile.d/nix.sh
 #. ./run_compile.sh
 
