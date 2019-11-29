@@ -2,6 +2,7 @@
 source /etc/profile.d/nix.sh
 #. ./run_compile.sh
 
+echo "hello"
 pwd
 $(pwd)/disk/bin/hello 
 
