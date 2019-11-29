@@ -1,4 +1,6 @@
 #!/bin/bash
+.  $HOME/.nix-profile/etc/profile.d/nix.sh
+. /etc/profile.d/nix.sh
 . ./run_compile.sh
 
 echo "setup"
