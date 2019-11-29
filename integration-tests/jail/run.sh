@@ -1,6 +1,9 @@
 #!/bin/bash
 source /etc/profile.d/nix.sh
-. ./run_compile.sh
+#. ./run_compile.sh
+
+pwd
+$(pwd)/disk/bin/hello 
 
 echo "setup"
 sleep 2
