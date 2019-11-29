@@ -4,7 +4,8 @@ source /etc/profile.d/nix.sh
 
 echo "hello"
 pwd
-$(pwd)/disk/bin/hello 
+export PATH=$(pwd)/disk/bin
+hello 
 
 echo "setup"
 sleep 2
