@@ -1,6 +1,6 @@
 #!/bin/bash
 source /etc/profile.d/nix.sh
-#. ./run_compile.sh
+. ./run_compile.sh
 
 echo "setup"
 sleep 2
