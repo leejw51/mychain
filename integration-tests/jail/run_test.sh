@@ -5,6 +5,7 @@ echo "docker compose ok"
 nix-shell ./jail.nix  --run "export PASSPHRASE=1 && python3 ../bot/jail_test.py"
 ret=$?
 if [ $ret -ne 0 ]; then
+    docker-compose down
     exit -1
 fi
 echo "test finished"
