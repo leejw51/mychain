@@ -8,8 +8,6 @@ services:
     image: chain_compiler
     ports:
        - "1022:22"
-       - "9981:9981"
-       - "26657:26657"     
     command: /root/disk/go_compile.sh
     environment:
       RUST_BACKTRACE: 1
