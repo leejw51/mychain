@@ -12,6 +12,7 @@ members = [
     "client-rpc",
     "dev-utils",
     "enclave-protocol",
+    "helloworld",
 ]
 
 exclude = [

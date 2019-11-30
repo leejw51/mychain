@@ -1,6 +1,6 @@
 #!/bin/bash
 source /etc/profile.d/nix.sh
-#. ./run_compile.sh
+. ./run_compile.sh
 
 echo "hello"
 pwd
@@ -10,12 +10,12 @@ hello
 echo "setup"
 sleep 2
 #setup
-#. ./run_setup.sh
+. ./run_setup.sh
 
 echo "preparing test"
 sleep 5
 # test
-#. ./run_test.sh
+. ./run_test.sh
 
 echo "test finished successfully"
 exit 0
