@@ -17,3 +17,5 @@ sleep 5
 # test
 . ./run_test.sh
 
+echo "test finished successfully"
+exit 0
