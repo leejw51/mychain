@@ -20,5 +20,4 @@ ENV PKG_CONFIG_PATH=$HOME/lib/pkgconfig
 #COPY ./ssh /root/.ssh
 #COPY ./bin /root/bin
 RUN mkdir /root/bin
-CMD ["sleep","infinity"]
 
