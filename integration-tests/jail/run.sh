@@ -2,10 +2,10 @@
 source /etc/profile.d/nix.sh
 . ./run_compile.sh
 
-echo "hello"
-pwd
 export PATH=$(pwd)/disk/bin:$PATH
-hello 
+echo "binaries"
+echo $PATH
+ls $(pwd)/disk/bin
 
 echo "setup"
 sleep 2
