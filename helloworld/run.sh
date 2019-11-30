@@ -1,2 +1,3 @@
 #!/bin/bash
-cargo build
+#cargo build
+echo "hello"
