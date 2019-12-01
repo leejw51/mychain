@@ -4,13 +4,13 @@ import json
 import requests
 import datetime
 import time
+from decouple import config
 from chainrpc import RPC, Blockchain
 class Program :
     def __init__(self) :
         self.rpc = RPC()
         self.blockchain = Blockchain()
-
-        self.server="http://localhost:26657"
+        self.server='http://127.0.0.1:{}'.format(config('JAIL_CHAIN_RPC'))
         # wallet a
         self.node0_address = ""
         self.node0_mnemonics= ""

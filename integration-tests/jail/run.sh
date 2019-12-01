@@ -3,6 +3,7 @@ source /etc/profile.d/nix.sh
 . ./run_compile.sh
 
 export PATH=$(pwd)/disk/bin:$PATH
+. ./run_port.sh
 echo "binaries"
 echo $PATH
 ls $(pwd)/disk/bin
