@@ -75,6 +75,7 @@ stdenv.mkDerivation rec {
     
     gmp
     pkgconfig
+    zeromq
     # With Python configuration requiring a special wrapper
     (python37.buildEnv.override {
       ignoreCollisions = true;
@@ -92,7 +93,6 @@ stdenv.mkDerivation rec {
          mnemonic
          _jsonrpcclient
          _python-decouple
-        zeromq
       ];
     })
   ];
