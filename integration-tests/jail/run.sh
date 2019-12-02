@@ -1,4 +1,5 @@
 #!/bin/bash
+echo "jail & unjail test"
 source /etc/profile.d/nix.sh
 . ./run_compile.sh
 
