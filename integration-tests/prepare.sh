@@ -5,9 +5,6 @@ IFS=
 # Global function return value
 RET_VALUE=0
 
-# change attribute
-chmod ug+s ./docker-data
-
 # @argument message
 function print_message() {
     echo "[$(date +"%Y-%m-%d|%T")] ${1}"
@@ -168,7 +165,6 @@ EOF
 
 DEV_CONF=$(cat << EOF
 {
-    "rewards_pool": "6250000000000000000",
     "distribution": {
         "{STAKING_ADDRESS}": "2500000000000000000",
         "0x3ae55c16800dc4bd0e3397a9d7806fb1f11639de": "1250000000000000000"
@@ -188,6 +184,13 @@ DEV_CONF=$(cat << EOF
     "initial_fee_policy": {
         "base_fee": "{BASE_FEE}",
         "per_byte_fee": "{PER_BYTE_FEE}"
+    },
+    "rewards_config": {
+        "monetary_expansion_cap": "6250000000000000000",
+        "distribution_period": 86400,
+        "monetary_expansion_r0": 500,
+        "monetary_expansion_tau": 166666600,
+        "monetary_expansion_decay": 999860
     },
     "council_nodes": {
         "0x3ae55c16800dc4bd0e3397a9d7806fb1f11639de": [
@@ -247,7 +250,7 @@ function _change_tenermint_chain_id() {
 }
 
 # Always execute at script located directory
-cd "$(dirname "${0}")"
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
 # Source constants
 . ./const-env.sh
@@ -262,6 +265,9 @@ fi
 if [ -z "${USE_DOCKER_COMPOSE}" ]; then
     check_command_exist "cargo"
 fi
+
+# Allow current user to access docker data directory as owner
+chmod ug+s ./docker-data
 
 print_step "Build Chain image"
 if [ ! -z "${USE_DOCKER_COMPOSE}" ]; then

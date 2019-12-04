@@ -16,21 +16,6 @@ import fire
 import toml
 import nacl.signing
 from nacl.encoding import HexEncoder
-from decouple import config
-
-ROOT_PATH = Path(config('ROOT_PATH', '.')).resolve()
-BASE_PORT = config('BASE_PORT', 26650, cast=int)
-SGX_DEVICE = config('SGX_DEVICE', None)
-SGX_MODE = 'HW' if SGX_DEVICE else 'SW'
-
-CHAIN_TX_ENCLAVE_DOCKER_IMAGE = config('CHAIN_TX_ENCLAVE_DOCKER_IMAGE',
-                                       'integration-tests-chain-tx-enclave')
-CHAIN_ID = config('CHAIN_ID', 'test-ab')
-
-DEVUTIL_CMD = Path('dev-utils')
-CLIENT_CMD = Path('client-cli')
-CHAIN_CMD = Path('chain-abci')
-CLIENT_RPC_CMD = Path('client-rpc')
 
 
 class SigningKey:
@@ -173,8 +158,8 @@ def priv_validator_key(seed):
 def node_key(seed):
     sk = SigningKey(seed)
     return {
-        'priv_key':{
-            'type':'tendermint/PrivKeyEd25519',
+        'priv_key': {
+            'type': 'tendermint/PrivKeyEd25519',
             'value': sk.priv_key_base64(),
         }
     }
@@ -215,23 +200,24 @@ def app_state_cfg(cfg):
     }
 
 
-def programs(node, app_hash):
-    node_path = ROOT_PATH / Path(node['name'])
+def programs(node, app_hash, root_path, cfg):
+    node_path = root_path / Path(node['name'])
     base_port = node['base_port']
     chain_abci_port = base_port + 8
     tendermint_rpc_port = base_port + 7
     client_rpc_port = base_port + 1
+    sgx_device = cfg.get('sgx_device')
     commands = [
-        ('tx-enclave', f'''docker run --rm -p {base_port}:25933 --env RUST_BACKTRACE=1 --env RUST_LOG=info -v {node_path / Path('enclave')}:/enclave-storage {'--device ' + SGX_DEVICE if SGX_DEVICE else ''} {CHAIN_TX_ENCLAVE_DOCKER_IMAGE}-{SGX_MODE.lower()}'''),
-        ('chain-abci', f'''{CHAIN_CMD} -g {app_hash} -c {CHAIN_ID} --enclave_server tcp://127.0.0.1:{base_port} --data {node_path / Path('chain')} -p {chain_abci_port}'''),
+        ('tx-enclave', f'''docker run --rm -p {base_port}:25933 --env RUST_BACKTRACE=1 --env RUST_LOG=info -v {node_path / Path('enclave')}:/enclave-storage {'--device ' + sgx_device if sgx_device else ''} {cfg['enclave_docker_image']}'''),
+        ('chain-abci', f'''chain-abci -g {app_hash} -c {cfg['chain_id']} --enclave_server tcp://127.0.0.1:{base_port} --data {node_path / Path('chain')} -p {chain_abci_port}'''),
         ('tendermint', f'''tendermint node --home={node_path / Path('tendermint')}'''),
-        ('client-rpc', f'''{CLIENT_RPC_CMD} --port={client_rpc_port} --chain-id={CHAIN_ID} --storage-dir={node_path / Path('wallet')} --websocket-url=ws://127.0.0.1:{tendermint_rpc_port}/websocket'''),
+        ('client-rpc', f'''client-rpc --port={client_rpc_port} --chain-id={cfg['chain_id']} --storage-dir={node_path / Path('wallet')} --websocket-url=ws://127.0.0.1:{tendermint_rpc_port}/websocket'''),
     ]
 
     return {
         'program:%s-%s' % (name, node['name']): {
             'command': cmd,
-            'stdout_logfile': f"%(here)s/{name}-%(group_name)s.log",
+            'stdout_logfile': f"%(here)s/logs/{name}-%(group_name)s.log",
             'environment': 'RUST_BACKTRACE=1,RUST_LOG=info',
             'autostart': 'true',
             'autorestart': 'true',
@@ -244,7 +230,7 @@ def programs(node, app_hash):
     }
 
 
-def tasks_ini(node_cfgs, app_hash):
+def tasks_ini(node_cfgs, app_hash, root_path, cfg):
     ini = {
         'supervisord': {
             'pidfile': '%(here)s/supervisord.pid',
@@ -261,7 +247,7 @@ def tasks_ini(node_cfgs, app_hash):
     }
 
     for node in node_cfgs:
-        prgs = programs(node, app_hash)
+        prgs = programs(node, app_hash, root_path, cfg)
         ini['group:%s' % node['name']] = {
             'programs': ','.join(name.split(':', 1)[1]
                                  for name in prgs.keys()),
@@ -307,8 +293,7 @@ async def gen_app_state(cfg):
     with tempfile.NamedTemporaryFile('w') as fp:
         json.dump(cfg, fp)
         fp.flush()
-        result = await interact(f'{DEVUTIL_CMD} genesis generate -g "{fp.name}"')
-        print(result)
+        result = await interact(f'dev-utils genesis generate -g "{fp.name}"')
         return json.loads('{%s}' % result.decode('utf-8'))
 
 
@@ -319,7 +304,7 @@ async def gen_wallet_addr(mnemonic, type='Staking', count=1):
     }[type]
     with tempfile.TemporaryDirectory() as dirname:
         await interact(
-            f'{CLIENT_CMD} wallet restore --name Default',
+            f'client-cli wallet restore --name Default',
             ('123456\n123456\n%s\n%s\n' % (mnemonic, mnemonic)).encode(),
             env=dict(
                 os.environ,
@@ -329,7 +314,7 @@ async def gen_wallet_addr(mnemonic, type='Staking', count=1):
         addrs = []
         for i in range(count):
             result = (await interact(
-                f'{CLIENT_CMD} address new --name Default --type {type}',
+                f'client-cli address new --name Default --type {type}',
                 b'123456\n',
                 env=dict(
                     os.environ,
@@ -343,7 +328,7 @@ async def gen_wallet_addr(mnemonic, type='Staking', count=1):
 async def gen_genesis(cfg):
     genesis = {
         "genesis_time": cfg['genesis_time'],
-        "chain_id": CHAIN_ID,
+        "chain_id": cfg['chain_id'],
         "consensus_params": {
             "block": {
                 "max_bytes": "22020096",
@@ -373,7 +358,7 @@ async def gen_genesis(cfg):
         ],
     }
 
-    patch = jsonpatch.JsonPatch(cfg['config_patch'])
+    patch = jsonpatch.JsonPatch(cfg['chain_config_patch'])
     state = await gen_app_state(patch.apply(app_state_cfg(cfg)))
     genesis.update(state)
     return genesis
@@ -417,16 +402,17 @@ async def init_cluster(cfg):
     peers = gen_peers(cfg['nodes'])
     genesis = await gen_genesis(cfg)
     app_hash = genesis['app_hash']
+    root_path = Path(cfg['root_path']).resolve()
 
     node_cfg= cfg['nodes'][0]
     info= {"app_hash":app_hash, "seed_id":  SigningKey(node_cfg['node_seed']).validator_address().lower()}
     # write
     json.dump(info,
-                open(ROOT_PATH / Path('info.json'), 'w'),
+                open(root_path / Path('info.json'), 'w'),
                 indent=4)
     # write nodes
     json.dump(cfg,
-                open(ROOT_PATH / Path('nodes_info.json'), 'w'),
+                open(root_path / Path('nodes_info.json'), 'w'),
                 indent=4)
 
     # write
@@ -435,10 +421,10 @@ async def init_cluster(cfg):
     f.write("export SEED_ID={}\n".format(info["seed_id"]))
     f.close()
     
-
     for i, node in enumerate(cfg['nodes']):
+        base_port = node['base_port']
         node_name = 'node%d' % i
-        cfg_path = ROOT_PATH / Path(node_name) / Path('tendermint') / Path('config')
+        cfg_path = root_path / Path(node_name) / Path('tendermint') / Path('config')
         if not cfg_path.exists():
             os.makedirs(cfg_path)
 
@@ -451,14 +437,26 @@ async def init_cluster(cfg):
         json.dump(node_key(node['validator_seed']),
                   open(cfg_path / Path('priv_validator_key.json'), 'w'),
                   indent=4)
-        toml.dump(tendermint_cfg(node_name,
-                                 26658,
-                                 26657,
-                                 26656,
-                                 ""),
-                  open(cfg_path / Path('config.toml'), 'w'))
 
-        data_path = ROOT_PATH / Path(node_name) / Path('tendermint') / Path('data')
+        patch = jsonpatch.JsonPatch(cfg['tendermint_config_patch'])
+        toml.dump(
+            patch.apply(
+                tendermint_cfg(
+                    node_name,
+                    #base_port + (i * 10) + 8,
+                    #base_port + (i * 10) + 7,
+                    #base_port + (i * 10) + 6,
+                    #peers
+                    26658,
+                    26657,
+                    26656,
+                    ""              
+                )
+            ),
+            open(cfg_path / Path('config.toml'), 'w')
+        )
+
+        data_path = root_path / Path(node_name) / Path('tendermint') / Path('data')
         if not data_path.exists():
             data_path.mkdir()
         json.dump({
@@ -467,8 +465,11 @@ async def init_cluster(cfg):
             "step": 0
         }, open(data_path / Path('priv_validator_state.json'), 'w'))
 
-    write_tasks_ini(open(ROOT_PATH / Path('tasks.ini'), 'w'),
-                    tasks_ini(cfg['nodes'], app_hash))
+    logs_path = root_path / Path('logs')
+    if not logs_path.exists():
+        logs_path.mkdir()
+    write_tasks_ini(open(root_path / Path('tasks.ini'), 'w'),
+                    tasks_ini(cfg['nodes'], app_hash, root_path, cfg))
 
 
 def gen_mnemonic():
@@ -489,13 +490,20 @@ async def populate_wallet_addresses(nodes):
 class CLI:
     def gen(self, count=1, rewards_pool=0,
             genesis_time="2019-11-20T08:56:48.618137Z",
-            base_fee='0.0', per_byte_fee='0.0'):
+            base_fee='0.0', per_byte_fee='0.0',
+            base_port=26650, sgx_device=None,
+            chain_id='test-chain-y3m1e6-AB', root_path='./data'):
         '''Generate testnet node specification
         :param count: Number of nodes, [default: 1].
         '''
         max_coin = 10000000000000000000
         share = int(int(max_coin - rewards_pool) / count / 2)
+        sgx_mode = '' if sgx_device else '-sw'
         cfg = {
+            'root_path': root_path,
+            'chain_id': chain_id,
+            'sgx_device': sgx_device,
+            'enclave_docker_image': 'integration-tests-chain-tx-enclave' + sgx_mode,
             'genesis_time': genesis_time,
             'rewards_pool': rewards_pool,
             'nodes': [
@@ -506,13 +514,17 @@ class CLI:
                     'node_seed': gen_seed(),
                     'bonded_coin': share,
                     'unbonded_coin': share,
-                    'base_port': BASE_PORT + (i * 10),
+                    'base_port': base_port + (i * 10),
                 }
                 for i in range(count)
             ],
-            'config_patch': [
+            'chain_config_patch': [
                 {'op': 'replace', 'path': '/initial_fee_policy/base_fee', 'value': '0.0'},
                 {'op': 'replace', 'path': '/initial_fee_policy/per_byte_fee', 'value': '0.0'},
+            ],
+            'tendermint_config_patch': [
+                {'op': 'replace', 'path': '/consensus/create_empty_blocks', 'value': True},
+                {'op': 'add', 'path': '/consensus/create_empty_blocks_interval', 'value': '0s'},
             ],
         }
         print(json.dumps(cfg, indent=4))
@@ -524,15 +536,11 @@ class CLI:
         '''
         cfg = json.load(open(spec) if spec else sys.stdin)
         asyncio.run(init_cluster(cfg))
-        print('Prepared succesfully', ROOT_PATH)
+        print('Prepared succesfully', cfg['root_path'])
 
     def prepare_cfg(self, cfg, spec=None):
-        '''Prepare tendermint testnet based on specification
-        :param spec: Path of specification file, [default: stdin]
-        '''
         asyncio.run(init_cluster(cfg))
-        print('Prepared succesfully', ROOT_PATH)
-
+        print('Prepared succesfully', cfg['root_path'])
 
 if __name__ == '__main__':
     fire.Fire(CLI())

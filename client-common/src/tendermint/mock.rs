@@ -2,9 +2,7 @@
 use crate::tendermint::types::*;
 use serde_json;
 use std::str::FromStr;
-use tendermint::{
-    account, chain, channel, net, node, validator, Moniker, PrivateKey, PublicKey, Version,
-};
+use tendermint::{account, chain, channel, net, node, validator, Moniker, PrivateKey, PublicKey};
 
 const DEFAULT_VALIDATOR_KEY: &str = "{
   \"type\": \"tendermint/PrivKeyEd25519\",
@@ -42,7 +40,6 @@ const DEFAULT_GENESIS_JSON: &str = r#"{
     ],
     "app_hash": "92AA35815C976AE33FD6042DF445D032B4F0C761EEA24292E6CC73CC3EE18B72",
     "app_state": {
-        "rewards_pool": "6250000000000000000",
         "distribution": {
             "0x3ae55c16800dc4bd0e3397a9d7806fb1f11639de": [
                 "Bonded",
@@ -69,6 +66,13 @@ const DEFAULT_GENESIS_JSON: &str = r#"{
                 "liveness_slash_percent": "0.100",
                 "byzantine_slash_percent": "0.200",
                 "slash_wait_period": 10800
+            },
+            "rewards_config": {
+                "monetary_expansion_cap": "6250000000000000000",
+                "distribution_period": 86400,
+                "monetary_expansion_r0": 500,
+                "monetary_expansion_tau": 145000000,
+                "monetary_expansion_decay": 999860
             },
             "max_validators": 50
         },
@@ -197,7 +201,7 @@ pub fn node_info() -> node::Info {
         id: node::Id::from_str("7edc638f79308dfdfcd77b743e1375b8e1cea6f2").unwrap(),
         listen_addr: node::info::ListenAddress::new("tcp://0.0.0.0:26656".to_owned()),
         network: chain_id(),
-        version: Version::default(),
+        version: "0.32.7".parse().unwrap(),
         channels: channel::Channels::default(),
         moniker: Moniker::from_str("test").unwrap(),
         other: node::info::OtherInfo {
@@ -268,11 +272,11 @@ pub fn block() -> Block {
 
 pub fn sync_info() -> status::SyncInfo {
     status::SyncInfo {
-        latest_block_hash: Hash::default(),
-        latest_app_hash: Hash::default(),
+        latest_block_hash: None,
+        latest_app_hash: None,
         latest_block_height: Height::default(),
         latest_block_time: Time::now(),
-        catching_up: true,
+        catching_up: false,
     }
 }
 
