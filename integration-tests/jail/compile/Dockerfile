@@ -1,6 +1,5 @@
 FROM cryptocom/chain:latest
 LABEL maintainer="Crypto.com"
-
 RUN echo 'source /opt/sgxsdk/environment' >> /root/.docker_bashrc 
 RUN echo 'source /root/.cargo/env' >> /root/.docker_bashrc
 RUN rm -rf /var/lib/apt/lists/*
