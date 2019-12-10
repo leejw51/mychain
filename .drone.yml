@@ -29,6 +29,7 @@ steps:
 - name: integration-tests
   commands:
   - cd integration-tests/jail
+  - ./my.sh
   - pwd
   - export SEED_ID="ok"
   - echo "i am test1"
@@ -38,6 +39,7 @@ steps:
   - echo "teardown"
   - pwd
   - cd integration-tests/jail
+  - ./my.sh
   - pwd
   - docker-compose down
   - echo "i am teardown" 
