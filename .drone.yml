@@ -30,6 +30,7 @@ steps:
   commands:
   - cd integration-tests/jail
   - pwd
+  - export SEED_ID="ok"
   - echo "i am test1"
 
 - name: Teardown
@@ -40,6 +41,7 @@ steps:
   - pwd
   - docker-compose down
   - echo "i am teardown" 
+  - echo "SEED_ID" $SEED_ID
   when:
     status:
      - success
