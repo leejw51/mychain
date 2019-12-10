@@ -36,6 +36,13 @@ steps:
   commands:
   - echo "teardown"
   - pwd
+  - cd integration-tests/jail
+  - pwd
+  - docker-compose down
   - echo "i am teardown" 
+  when:
+    status:
+     - success
+     - failure
 
 
