@@ -30,6 +30,7 @@ steps:
   commands:
   - cd integration-tests/jail
   - echo "./run.sh"
+  - ./run.sh
 
 - name: Teardown
   commands:
