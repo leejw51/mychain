@@ -29,6 +29,13 @@ steps:
 - name: integration-tests
   commands:
   - cd integration-tests/jail
-  - ./run.sh
+  - pwd
+  - echo "i am test1"
+
+- name: Teardown
+  commands:
+  - echo "teardown"
+  - pwd
+  - echo "i am teardown" 
 
 
