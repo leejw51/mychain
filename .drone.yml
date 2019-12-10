@@ -13,8 +13,6 @@ steps:
   - export PATH=$HOME/.cargo/bin:$HOME/.local/bin:$PATH
   - export PKG_CONFIG_PATH=$HOME/lib/pkgconfig
   - echo "HOME FOLDER = " $HOME
-  - cd helloworld
-  - ./run.sh
 
 ---
 kind: pipeline
