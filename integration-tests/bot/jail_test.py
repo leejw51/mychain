@@ -5,7 +5,6 @@ import requests
 import datetime
 import time
 import jsonrpcclient
-from decouple import config
 from chainrpc import RPC, Blockchain
 class Program :
     def __init__(self) :

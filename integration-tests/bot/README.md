@@ -1,28 +1,28 @@
 Prerequisite
 ============
 
-* `tendermint <https://tendermint.com/downloads>`_ in PATH.
-* `docker <https://docs.docker.com/install/>`_ with ``integration-tests-chain-tx-enclave`` (or ``integration-tests-chain-tx-enclave-sw`` for software mode) image inside.
+* [tendermint](https://tendermint.com/downloads) in PATH.
+* [docker](https://docs.docker.com/install/) with ``integration-tests-chain-tx-enclave`` (or ``integration-tests-chain-tx-enclave-sw`` for software mode) image inside.
 * binaries ``dev-utils`` ``client-cli`` ``chain-abci`` ``client-rpc`` in PATH.
 * python3.7+
 
 Install
 =======
 
-::
+```
+$ pip3 install git+https://github.com/yihuang/crypto-chain-bot.git
+```
 
-  $ pip3 install git+https://github.com/yihuang/crypto-chain-bot.git
+OR:
 
-OR: ::
-
+```
   $ git clone https://github.com/yihuang/crypto-chain-bot.git
   $ cd crypto-chain-bot
   $ pip3 install -e .
+```
 
 Usage
 =====
-
-::
 
     $ cd /path/to/testnet
     $ chainbot.py gen 2 > cluster.json
@@ -70,8 +70,8 @@ Usage
     tasks.ini
     cluster.json
     $ supervisord -n -c tasks.ini
-    
-Manage the running processes: ::
+
+Manage the running processes:
 
     $ supervisorctl -c tasks.ini
     node0:chain-abci-node0           RUNNING   pid 12080, uptime 0:00:13
@@ -99,8 +99,6 @@ Port Usage
 Wallet RPC
 ----------
 
-::
-
     $ chainrpc.py wallet restore 'winter kit mistake video congress crucial cement gaze seven certain fog cloud jeans brisk glue'
     Default
     $ chainrpc.py address list
@@ -127,8 +125,6 @@ Wallet RPC
 
 Tendermint RPC
 ---------------
-
-::
 
     $ chainrpc.py chain status
     node_info:      {"protocol_version": {"p2p": "7", "block": "10", "app": "0"}, "id": "3135de411a5028c61c12ab6635add83ead051342", "listen_addr": "tcp://0.0.0.0:26656", "network": "test-chain-y3m1e6-AB", "version": "0.32.7", "channels": "4020212223303800", "moniker": "node0", "other": {"tx_index": "on", "rpc_address": "tcp://127.0.0.1:26657"}}
