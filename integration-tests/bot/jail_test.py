@@ -4,13 +4,13 @@ import json
 import requests
 import datetime
 import time
+import jsonrpcclient
 from decouple import config
 from chainrpc import RPC, Blockchain
 class Program :
     def __init__(self) :
         self.rpc = RPC()
         self.blockchain = Blockchain()
-        self.server='http://127.0.0.1:{}'.format(config('JAIL_CHAIN_RPC'))
         # wallet a
         self.node0_address = ""
         self.node0_mnemonics= ""
@@ -61,24 +61,17 @@ class Program :
     def unjail(self,name, passphrase, address):
         try:
             return self.rpc.staking.unjail(address, name)
-        except KeyboardInterrupt as ex:
+        except jsonrpcclient.exceptions.JsonRpcClientError as ex:
             print("unjail fail={}".format(ex))
-        except SystemExit as ex:
-            print("unjail fail={}".format(ex))
-        except Exception as ex:
-            print("unjail fail={}".format(ex))
-        except :
-            print("unjail fail")
 
     def check_validators(self) :
         try: 
-            x= requests.get('{}/validators'.format(self.server))
-            data =len(x.json()["result"]["validators"])
+            x= self.rpc.chain.validators() 
+            print(x)
+            data =len(x["validators"])
             return data
         except requests.ConnectionError:
             return 0
-        except:
-            assert False
 
     def check_validators_old(self) :
         x=self.blockchain.validators()["validators"]
@@ -155,14 +148,8 @@ class Program :
         self.test_jailing()
         try :
             self.restore_wallets()
-        except KeyboardInterrupt as ex:
+        except jsonrpcclient.exceptions.JsonRpcClientError as ex:
             print("wallet already exists={}".format(ex))
-        except SystemExit as ex:
-            print("wallet already exists={}".format(ex))
-        except Exception as ex:
-            print("wallet already exists={}".format(ex))
-        except:
-            print("wallet already exists")
         self.create_addresses()
         self.test_unjailing()
 

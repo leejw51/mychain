@@ -10,7 +10,7 @@ services:
     ports:
        - ${JAIL_CLIENT_RPC}:9981
        - ${JAIL_CHAIN_RPC}:26657
-    command: /root/disk/go.sh
+    command: /root/disk/go_test.sh
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
@@ -23,7 +23,7 @@ services:
       - ./disk:/root/disk
       - ./disk/config1:/root/.tendermint/config
     image: chain_test1
-    command: /root/disk/go.sh
+    command: /root/disk/go_test.sh
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug    
