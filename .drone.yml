@@ -40,10 +40,10 @@ steps:
   - pwd
   - cd integration-tests/jail
   - . ./my.sh
+  - echo "SEED_ID" $SEED_ID
   - pwd
   - docker-compose down
   - echo "i am teardown" 
-  - echo "SEED_ID" $SEED_ID
   when:
     status:
      - success
