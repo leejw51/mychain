@@ -5,10 +5,9 @@ import fire
 from jsonrpcclient import request
 from decouple import config
 
-#CLIENT_RPC_URL = config('CLIENT_RPC_URL', 'http://127.0.0.1:9981')
-#CHAIN_RPC_URL = config('CHAIN_RPC_URL', 'http://127.0.0.1:26657')
-CLIENT_RPC_URL = 'http://127.0.0.1:{}'.format(config('JAIL_CLIENT_RPC'))  
-CHAIN_RPC_URL = 'http://127.0.0.1:{}'.format(config('JAIL_CHAIN_RPC')) 
+BASE_PORT = config('BASE_PORT', 26650, cast=int)
+CLIENT_RPC_URL = config('CLIENT_RPC_URL', 'http://127.0.0.1:%d' % (BASE_PORT + 9))
+CHAIN_RPC_URL = config('CHAIN_RPC_URL', 'http://127.0.0.1:%d' % (BASE_PORT + 7))
 DEFAULT_WALLET = config('DEFAULT_WALLET', 'Default')
 
 
@@ -19,8 +18,8 @@ def get_passphrase():
     return phrase
 
 
-def call(method, *args):
-    rsp = request(CLIENT_RPC_URL, method, *args)
+def call(method, *args, **kwargs):
+    rsp = request(CLIENT_RPC_URL, method, *args, **kwargs)
     return rsp.data.result
 
 
@@ -80,7 +79,7 @@ class Wallet:
 
     def view_key(self, name=DEFAULT_WALLET):
         return call(
-            'wallet_getViewKey'
+            'wallet_getViewKey',
             [name, get_passphrase()]
         )
 
@@ -110,20 +109,20 @@ class Wallet:
 
 
 class Staking:
-    def deposit_stake(self, to_address, inputs, name=DEFAULT_WALLET):
+    def deposit(self, to_address, inputs, name=DEFAULT_WALLET):
         return call('staking_depositStake', [name, get_passphrase()], fix_address(to_address), inputs)
 
     def state(self, address, name=DEFAULT_WALLET):
         return call('staking_state', [name, get_passphrase()], fix_address(address))
 
-    def unbond_stake(self, address, amount, name=DEFAULT_WALLET):
-        return call('staking_unbondStake', [name, get_passphrase()], fix_address(address), amount)
+    def unbond(self, address, amount, name=DEFAULT_WALLET):
+        return call('staking_unbondStake', [name, get_passphrase()], fix_address(address), str(amount))
 
-    def withdraw_all_unbonded_stake(self, from_address, to_address, name=DEFAULT_WALLET):
+    def withdraw_all_unbonded(self, from_address, to_address, view_keys=None, name=DEFAULT_WALLET):
         return call(
             'staking_withdrawAllUnbondedStake',
             [name, get_passphrase()],
-            fix_address(from_address), to_address, []
+            fix_address(from_address), to_address, view_keys or []
         )
 
     def unjail(self, address, name=DEFAULT_WALLET):
@@ -133,17 +132,17 @@ class Staking:
 class MultiSig:
     def create_address(self, public_keys, self_public_key, required_signatures, name=DEFAULT_WALLET):
         return call('multiSig_createAddress',
-                   [name, get_passphrase()],
-                   public_keys,
-                   self_public_key,
-                   required_signatures)
+                    [name, get_passphrase()],
+                    public_keys,
+                    self_public_key,
+                    required_signatures)
 
     def new_session(self, message, signer_public_keys, self_public_key, name=DEFAULT_WALLET):
         return call('multiSig_newSession',
-                   [name, get_passphrase()],
-                   message,
-                   signer_public_keys,
-                   self_public_key)
+                    [name, get_passphrase()],
+                    message,
+                    signer_public_keys,
+                    self_public_key)
 
     def nonce_commitment(self, session_id, passphrase):
         return call('multiSig_nonceCommitment', session_id, passphrase)
@@ -168,9 +167,9 @@ class MultiSig:
 
     def broadcast_with_signature(self, session_id, unsigned_transaction, name=DEFAULT_WALLET):
         return call('multiSig_broadcastWithSignature',
-                   [name, get_passphrase()],
-                   session_id,
-                   unsigned_transaction)
+                    [name, get_passphrase()],
+                    session_id,
+                    unsigned_transaction)
 
 
 class Blockchain:
@@ -189,9 +188,8 @@ class Blockchain:
     def latest_height(self):
         return self.status()['sync_info']['latest_block_height']
 
-    def validators(self, height='latest'):
-        height = height if height != 'latest' else self.latest_height()
-        return call_chain('validators', str(height))
+    def validators(self, height=None):
+        return call_chain('validators', str(height) if height is not None else None)
 
     def block(self, height='latest'):
         height = height if height != 'latest' else self.latest_height()
@@ -209,8 +207,8 @@ class Blockchain:
         height = height if height != 'latest' else self.latest_height()
         return call_chain('commit', str(height))
 
-    def query(self, path, data, proof=False):
-        return call_chain('abci_query', path, data, proof)
+    def query(self, path, data=None, height=None, proof=False):
+        return call_chain('abci_query', path, data, str(height) if height is not None else None, proof)
 
     def broadcast_tx_commit(self, tx):
         return call_chain('broadcast_tx_commit', tx)

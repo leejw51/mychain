@@ -6,7 +6,7 @@ edition = "2018"
 
 [features]
 mock-enc-dec = []
-default = ["mock-enc-dec"]
+default = []
 
 [dependencies]
 chain-core = { path = "../chain-core" }
@@ -23,6 +23,6 @@ pbr = "1.0"
 log = "0.4.8"
 env_logger = "0.7.1"
 cli-table = "0.2"
-zeroize = "1.0"
+zeroize = "1.1"
 base64 = "0.11"
 tiny-bip39 = { version = "0.6", default-features = false }

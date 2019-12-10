@@ -2,6 +2,7 @@ use parity_scale_codec::Decode;
 use secstr::SecUtf8;
 
 use crate::NetworkOpsClient;
+use chain_core::common::Timespec;
 use chain_core::init::coin::{sum_coins, Coin};
 use chain_core::state::account::{
     CouncilNode, DepositBondTx, StakedState, StakedStateAddress, StakedStateOpAttributes,
@@ -17,21 +18,22 @@ use chain_core::tx::{TransactionId, TxAux};
 use chain_tx_validation::{check_inputs_basic, check_outputs_basic, verify_unjailed};
 use client_common::tendermint::types::AbciQueryExt;
 use client_common::tendermint::Client;
-use client_common::{Error, ErrorKind, Result, ResultExt, SignedTransaction};
-use client_core::signer::{DummySigner, Signer};
+use client_common::{Error, ErrorKind, Result, ResultExt, SignedTransaction, Storage};
+use client_core::signer::{DummySigner, Signer, WalletSignerManager};
 use client_core::{TransactionObfuscation, UnspentTransactions, WalletClient};
+use tendermint::Time;
 
 /// Default implementation of `NetworkOpsClient`
 pub struct DefaultNetworkOpsClient<W, S, C, F, E>
 where
     W: WalletClient,
-    S: Signer,
+    S: Storage + Clone,
     C: Client,
     F: FeeAlgorithm,
     E: TransactionObfuscation,
 {
     wallet_client: W,
-    signer: S,
+    signer_manager: WalletSignerManager<S>,
     client: C,
     fee_algorithm: F,
     transaction_cipher: E,
@@ -40,7 +42,7 @@ where
 impl<W, S, C, F, E> DefaultNetworkOpsClient<W, S, C, F, E>
 where
     W: WalletClient,
-    S: Signer,
+    S: Storage + Clone,
     C: Client,
     F: FeeAlgorithm,
     E: TransactionObfuscation,
@@ -48,14 +50,14 @@ where
     /// Creates a new instance of `DefaultNetworkOpsClient`
     pub fn new(
         wallet_client: W,
-        signer: S,
+        signer_manager: WalletSignerManager<S>,
         client: C,
         fee_algorithm: F,
         transaction_cipher: E,
     ) -> Self {
         Self {
             wallet_client,
-            signer,
+            signer_manager,
             client,
             fee_algorithm,
             transaction_cipher,
@@ -113,20 +115,31 @@ where
             .to_coin();
         Ok(fee)
     }
+
+    fn get_last_block_time(&self) -> Result<Timespec> {
+        Ok(self
+            .client
+            .status()?
+            .sync_info
+            .latest_block_time
+            .duration_since(Time::unix_epoch())
+            .unwrap()
+            .as_secs())
+    }
 }
 
 impl<W, S, C, F, E> NetworkOpsClient for DefaultNetworkOpsClient<W, S, C, F, E>
 where
     W: WalletClient,
-    S: Signer,
+    S: Storage + Clone,
     C: Client,
     F: FeeAlgorithm,
     E: TransactionObfuscation,
 {
-    fn create_deposit_bonded_stake_transaction(
-        &self,
-        name: &str,
-        passphrase: &SecUtf8,
+    fn create_deposit_bonded_stake_transaction<'a>(
+        &'a self,
+        name: &'a str,
+        passphrase: &'a SecUtf8,
         inputs: Vec<TxoPointer>,
         to_address: StakedStateAddress,
         attributes: StakedStateOpAttributes,
@@ -151,12 +164,10 @@ where
             })
             .collect::<Result<Vec<(TxoPointer, TxOut)>>>()?;
         let unspent_transactions = UnspentTransactions::new(transactions);
-        let witness = self.signer.sign(
-            name,
-            passphrase,
-            transaction.id(),
-            &unspent_transactions.select_all(),
-        )?;
+        let signer = self.signer_manager.create_signer(name, passphrase);
+
+        let witness = signer
+            .schnorr_sign_transaction(transaction.id(), &unspent_transactions.select_all())?;
 
         check_inputs_basic(&transaction.inputs, &witness).map_err(|e| {
             Error::new(
@@ -235,7 +246,15 @@ where
         outputs: Vec<TxOut>,
         attributes: TxAttributes,
     ) -> Result<TxAux> {
+        let last_block_time = self.get_last_block_time()?;
         let staked_state = self.get_staked_state(name, passphrase, from_address)?;
+
+        if staked_state.unbonded_from > last_block_time {
+            return Err(Error::new(
+                ErrorKind::ValidationError,
+                "Staking state is not yet unbonded",
+            ));
+        }
 
         verify_unjailed(&staked_state).map_err(|e| {
             Error::new(
@@ -475,6 +494,7 @@ mod tests {
         Punishment, PunishmentKind, StakedState, StakedStateOpAttributes,
     };
     use chain_core::state::tendermint::TendermintValidatorPubKey;
+    use chain_core::state::ChainState;
     use chain_core::tx::data::input::TxoIndex;
     use chain_core::tx::data::TxId;
     use chain_core::tx::fee::Fee;
@@ -482,11 +502,13 @@ mod tests {
     use chain_tx_validation::witness::verify_tx_recover_address;
     use client_common::storage::MemoryStorage;
     use client_common::tendermint::lite;
+    use client_common::tendermint::mock;
     use client_common::tendermint::types::*;
     use client_common::{PrivateKey, PublicKey, Transaction};
-    use client_core::signer::DefaultSigner;
+    use client_core::signer::WalletSignerManager;
     use client_core::types::WalletKind;
     use client_core::wallet::DefaultWalletClient;
+
     #[derive(Debug)]
     struct MockTransactionCipher;
 
@@ -606,6 +628,13 @@ mod tests {
                 ..Default::default()
             })
         }
+
+        fn query_state_batch<T: Iterator<Item = u64>>(
+            &self,
+            _heights: T,
+        ) -> Result<Vec<ChainState>> {
+            unreachable!()
+        }
     }
 
     #[derive(Default, Clone)]
@@ -617,7 +646,14 @@ mod tests {
         }
 
         fn status(&self) -> Result<Status> {
-            unreachable!()
+            Ok(Status {
+                sync_info: status::SyncInfo {
+                    latest_block_height: Height::default(),
+                    latest_app_hash: None,
+                    ..mock::sync_info()
+                },
+                ..mock::status_response()
+            })
         }
 
         fn block(&self, _: u64) -> Result<Block> {
@@ -666,6 +702,13 @@ mod tests {
                 ..Default::default()
             })
         }
+
+        fn query_state_batch<T: Iterator<Item = u64>>(
+            &self,
+            _heights: T,
+        ) -> Result<Vec<ChainState>> {
+            unreachable!()
+        }
     }
 
     #[test]
@@ -674,7 +717,7 @@ mod tests {
         let passphrase = &SecUtf8::from("passphrase");
 
         let storage = MemoryStorage::default();
-        let signer = DefaultSigner::new(storage.clone());
+        let signer_manager = WalletSignerManager::new(storage.clone());
 
         let fee_algorithm = UnitFeeAlgorithm::default();
 
@@ -687,7 +730,7 @@ mod tests {
         let tendermint_client = MockClient::default();
         let network_ops_client = DefaultNetworkOpsClient::new(
             wallet_client,
-            signer,
+            signer_manager,
             tendermint_client,
             fee_algorithm,
             MockTransactionCipher,
@@ -722,7 +765,7 @@ mod tests {
         let passphrase = &SecUtf8::from("passphrase");
 
         let storage = MemoryStorage::default();
-        let signer = DefaultSigner::new(storage.clone());
+        let signer_manager = WalletSignerManager::new(storage.clone());
 
         let fee_algorithm = UnitFeeAlgorithm::default();
 
@@ -735,7 +778,7 @@ mod tests {
         let tendermint_client = MockClient::default();
         let network_ops_client = DefaultNetworkOpsClient::new(
             wallet_client,
-            signer,
+            signer_manager,
             tendermint_client,
             fee_algorithm,
             MockTransactionCipher,
@@ -759,7 +802,7 @@ mod tests {
         let passphrase = &SecUtf8::from("passphrase");
 
         let storage = MemoryStorage::default();
-        let signer = DefaultSigner::new(storage.clone());
+        let signer_manager = WalletSignerManager::new(storage.clone());
 
         let fee_algorithm = UnitFeeAlgorithm::default();
 
@@ -768,7 +811,7 @@ mod tests {
         let tendermint_client = MockClient::default();
         let network_ops_client = DefaultNetworkOpsClient::new(
             wallet_client,
-            signer,
+            signer_manager,
             tendermint_client,
             fee_algorithm,
             MockTransactionCipher,
@@ -817,7 +860,7 @@ mod tests {
         let passphrase = &SecUtf8::from("passphrase");
 
         let storage = MemoryStorage::default();
-        let signer = DefaultSigner::new(storage.clone());
+        let signer_manager = WalletSignerManager::new(storage.clone());
 
         let fee_algorithm = UnitFeeAlgorithm::default();
 
@@ -826,7 +869,7 @@ mod tests {
         let tendermint_client = MockClient::default();
         let network_ops_client = DefaultNetworkOpsClient::new(
             wallet_client,
-            signer,
+            signer_manager,
             tendermint_client,
             fee_algorithm,
             MockTransactionCipher,
@@ -885,7 +928,7 @@ mod tests {
         let passphrase = &SecUtf8::from("passphrase");
 
         let storage = MemoryStorage::default();
-        let signer = DefaultSigner::new(storage.clone());
+        let signer_manager = WalletSignerManager::new(storage.clone());
 
         let fee_algorithm = UnitFeeAlgorithm::default();
 
@@ -894,7 +937,7 @@ mod tests {
         let tendermint_client = MockClient::default();
         let network_ops_client = DefaultNetworkOpsClient::new(
             wallet_client,
-            signer,
+            signer_manager,
             tendermint_client,
             fee_algorithm,
             MockTransactionCipher,
@@ -928,7 +971,7 @@ mod tests {
         let passphrase = &SecUtf8::from("passphrase");
 
         let storage = MemoryStorage::default();
-        let signer = DefaultSigner::new(storage.clone());
+        let signer_manager = WalletSignerManager::new(storage.clone());
 
         let fee_algorithm = UnitFeeAlgorithm::default();
 
@@ -937,7 +980,7 @@ mod tests {
 
         let network_ops_client = DefaultNetworkOpsClient::new(
             wallet_client,
-            signer,
+            signer_manager,
             tendermint_client,
             fee_algorithm,
             MockTransactionCipher,
@@ -966,7 +1009,7 @@ mod tests {
         let passphrase = &SecUtf8::from("passphrase");
 
         let storage = MemoryStorage::default();
-        let signer = DefaultSigner::new(storage.clone());
+        let signer_manager = WalletSignerManager::new(storage.clone());
 
         let fee_algorithm = UnitFeeAlgorithm::default();
 
@@ -975,7 +1018,7 @@ mod tests {
 
         let network_ops_client = DefaultNetworkOpsClient::new(
             wallet_client,
-            signer,
+            signer_manager,
             tendermint_client,
             fee_algorithm,
             MockTransactionCipher,
@@ -1003,7 +1046,7 @@ mod tests {
         let passphrase = &SecUtf8::from("passphrase");
 
         let storage = MemoryStorage::default();
-        let signer = DefaultSigner::new(storage.clone());
+        let signer_manager = WalletSignerManager::new(storage.clone());
 
         let fee_algorithm = UnitFeeAlgorithm::default();
 
@@ -1012,7 +1055,7 @@ mod tests {
         let tendermint_client = MockJailedClient::default();
         let network_ops_client = DefaultNetworkOpsClient::new(
             wallet_client,
-            signer,
+            signer_manager,
             tendermint_client,
             fee_algorithm,
             MockTransactionCipher,
@@ -1053,7 +1096,7 @@ mod tests {
         let passphrase = &SecUtf8::from("passphrase");
 
         let storage = MemoryStorage::default();
-        let signer = DefaultSigner::new(storage.clone());
+        let signer_manager = WalletSignerManager::new(storage.clone());
 
         let fee_algorithm = UnitFeeAlgorithm::default();
 
@@ -1062,7 +1105,7 @@ mod tests {
         let tendermint_client = MockClient::default();
         let network_ops_client = DefaultNetworkOpsClient::new(
             wallet_client,
-            signer,
+            signer_manager,
             tendermint_client,
             fee_algorithm,
             MockTransactionCipher,

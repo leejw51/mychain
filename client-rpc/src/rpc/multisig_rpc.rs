@@ -309,6 +309,7 @@ mod test {
     use secstr::SecUtf8;
 
     use chain_core::init::coin::CoinError;
+    use chain_core::state::ChainState;
     use chain_core::tx::data::TxId;
     use chain_core::tx::fee::{Fee, FeeAlgorithm};
     use chain_core::tx::TxAux;
@@ -317,8 +318,8 @@ mod test {
     use client_common::tendermint::types::*;
     use client_common::tendermint::Client;
     use client_common::{PrivateKey, Result as CommonResult, SignedTransaction, Transaction};
-    use client_core::signer::DefaultSigner;
-    use client_core::transaction_builder::DefaultTransactionBuilder;
+    use client_core::signer::WalletSignerManager;
+    use client_core::transaction_builder::DefaultWalletTransactionBuilder;
     use client_core::types::WalletKind;
     use client_core::wallet::DefaultWalletClient;
     use client_core::TransactionObfuscation;
@@ -365,9 +366,9 @@ mod test {
     }
 
     fn make_test_wallet_client(storage: MemoryStorage) -> TestWalletClient {
-        let signer = DefaultSigner::new(storage.clone());
-        let transaction_builder = DefaultTransactionBuilder::new(
-            signer,
+        let signer_manager = WalletSignerManager::new(storage.clone());
+        let transaction_builder = DefaultWalletTransactionBuilder::new(
+            signer_manager,
             ZeroFeeAlgorithm::default(),
             MockTransactionCipher,
         );
@@ -389,7 +390,7 @@ mod test {
         }
     }
 
-    #[derive(Default)]
+    #[derive(Default, Clone)]
     pub struct ZeroFeeAlgorithm;
 
     impl FeeAlgorithm for ZeroFeeAlgorithm {
@@ -402,7 +403,7 @@ mod test {
         }
     }
 
-    #[derive(Debug)]
+    #[derive(Debug, Clone)]
     struct MockTransactionCipher;
 
     impl TransactionObfuscation for MockTransactionCipher {
@@ -419,10 +420,10 @@ mod test {
         }
     }
 
-    type TestTxBuilder =
-        DefaultTransactionBuilder<TestSigner, ZeroFeeAlgorithm, MockTransactionCipher>;
-    type TestSigner = DefaultSigner<MemoryStorage>;
-    type TestWalletClient = DefaultWalletClient<MemoryStorage, MockRpcClient, TestTxBuilder>;
+    type TestWalletTransactionBuilder =
+        DefaultWalletTransactionBuilder<MemoryStorage, ZeroFeeAlgorithm, MockTransactionCipher>;
+    type TestWalletClient =
+        DefaultWalletClient<MemoryStorage, MockRpcClient, TestWalletTransactionBuilder>;
 
     #[derive(Default)]
     pub struct MockRpcClient;
@@ -472,6 +473,13 @@ mod test {
 
         fn query(&self, _path: &str, _data: &[u8]) -> CommonResult<AbciQuery> {
             unreachable!("query")
+        }
+
+        fn query_state_batch<T: Iterator<Item = u64>>(
+            &self,
+            _heights: T,
+        ) -> CommonResult<Vec<ChainState>> {
+            unreachable!()
         }
     }
 }

@@ -111,7 +111,8 @@ function start_chain_abci() {
             --port "${2}" \
             --chain_id "${CHAIN_ID}" \
             --genesis_app_hash ${1} \
-            --enclave_server "tcp://127.0.0.1:${3}"
+            --enclave_server "tcp://127.0.0.1:${3}" \
+            --tx_query "tcp://127.0.0.1:${3}"
 }
 
 # @argument Wallet Storage directory
@@ -154,7 +155,7 @@ function start_client_cli() {
     echo
     echo "CRYPTO_CHAIN_ID="${CHAIN_ID}" \\"
     echo "CRYPTO_CLIENT_STORAGE="${STORAGE}" \\"
-    echo "CRYPTO_CLIENT_TENDERMINT="ws://127.0.0.1:${1}/websocket" \\"
+    echo "CRYPTO_CLIENT_TENDERMINT="ws://127.0.0.1:${2}/websocket" \\"
     echo "RUST_BACKTRACE=1 \\"
     echo "RUST_LOG=info \\"
     echo "    cargo run --bin client-cli --"

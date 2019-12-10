@@ -1,6 +1,5 @@
 use std::collections::BTreeSet;
 
-use bip39::{Language, Mnemonic, MnemonicType};
 use parity_scale_codec::Encode;
 use secp256k1::schnorrsig::SchnorrSignature;
 use secstr::SecUtf8;
@@ -24,12 +23,12 @@ use client_common::{
 };
 
 use crate::service::*;
-use crate::transaction_builder::UnauthorizedTransactionBuilder;
+use crate::transaction_builder::UnauthorizedWalletTransactionBuilder;
 use crate::types::WalletKind;
 use crate::types::{AddressType, BalanceChange, TransactionChange};
 use crate::{
-    InputSelectionStrategy, MultiSigWalletClient, TransactionBuilder, UnspentTransactions,
-    WalletClient,
+    InputSelectionStrategy, Mnemonic, MultiSigWalletClient, UnspentTransactions, WalletClient,
+    WalletTransactionBuilder,
 };
 
 /// Default implementation of `WalletClient` based on `Storage` and `Index`
@@ -38,7 +37,7 @@ pub struct DefaultWalletClient<S, C, T>
 where
     S: Storage,
     C: Client,
-    T: TransactionBuilder,
+    T: WalletTransactionBuilder,
 {
     key_service: KeyService<S>,
     hd_key_service: HdKeyService<S>,
@@ -55,7 +54,7 @@ impl<S, C, T> DefaultWalletClient<S, C, T>
 where
     S: Storage + Clone,
     C: Client,
-    T: TransactionBuilder,
+    T: WalletTransactionBuilder,
 {
     /// Creates a new instance of `DefaultWalletClient`
     pub fn new(storage: S, tendermint_client: C, transaction_builder: T) -> Self {
@@ -72,13 +71,17 @@ where
     }
 }
 
-impl<S> DefaultWalletClient<S, UnauthorizedClient, UnauthorizedTransactionBuilder>
+impl<S> DefaultWalletClient<S, UnauthorizedClient, UnauthorizedWalletTransactionBuilder>
 where
     S: Storage + Clone,
 {
     /// Creates a new read-only instance of `DefaultWalletClient`
     pub fn new_read_only(storage: S) -> Self {
-        Self::new(storage, UnauthorizedClient, UnauthorizedTransactionBuilder)
+        Self::new(
+            storage,
+            UnauthorizedClient,
+            UnauthorizedWalletTransactionBuilder,
+        )
     }
 }
 
@@ -86,7 +89,7 @@ impl<S, C, T> WalletClient for DefaultWalletClient<S, C, T>
 where
     S: Storage,
     C: Client,
-    T: TransactionBuilder,
+    T: WalletTransactionBuilder,
 {
     #[inline]
     fn wallets(&self) -> Result<Vec<String>> {
@@ -112,7 +115,7 @@ where
                     .map(|_| None)
             }
             WalletKind::HD => {
-                let mnemonic = Mnemonic::new(MnemonicType::Words24, Language::English);
+                let mnemonic = Mnemonic::new();
 
                 self.hd_key_service
                     .add_mnemonic(name, &mnemonic, passphrase)?;
@@ -126,9 +129,9 @@ where
                 self.key_service
                     .add_keypair(&private_key, &public_key, passphrase)?;
 
-                self.wallet_service
-                    .create(name, passphrase, public_key)
-                    .map(|_| Some(mnemonic))
+                self.wallet_service.create(name, passphrase, public_key)?;
+
+                Ok(Some(mnemonic))
             }
         }
     }
@@ -443,13 +446,13 @@ where
         let mut unspent_transactions = self.unspent_transactions(name, passphrase)?;
         unspent_transactions.apply_all(input_selection_strategy.unwrap_or_default().as_ref());
 
-        self.transaction_builder.build(
+        self.transaction_builder.build_transfer_tx(
             name,
             passphrase,
-            outputs,
-            attributes,
             unspent_transactions,
+            outputs,
             return_address,
+            attributes,
         )
     }
 
@@ -464,7 +467,7 @@ impl<S, C, T> MultiSigWalletClient for DefaultWalletClient<S, C, T>
 where
     S: Storage,
     C: Client,
-    T: TransactionBuilder,
+    T: WalletTransactionBuilder,
 {
     fn schnorr_signature(
         &self,

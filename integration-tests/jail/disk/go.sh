@@ -1,5 +1,4 @@
 #!/bin/bash
-service ssh start
 cd /root/bin
 echo "clear folders"
 rm -rf /root/bin/.enclave
@@ -23,3 +22,7 @@ echo "rust flags=" $RUSTFLAGS
 echo "app port=" $APP_PORT
 echo "compile chain"
 echo "ready"
+
+cd /root/disk
+/root/disk/launch.sh
+sleep infinity

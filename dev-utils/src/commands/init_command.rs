@@ -4,14 +4,14 @@ use std::path::PathBuf;
 use std::process::Command;
 use std::str::FromStr;
 
-use chrono::{DateTime, SecondsFormat};
 use quest::{password, success};
 use secstr::SecUtf8;
 use serde_json::json;
 
-use chain_core::init::config::{ValidatorKeyType, ValidatorPubkey};
 use chain_core::init::{address::RedeemAddress, coin::Coin, config::InitConfig};
+use chain_core::state::tendermint::TendermintValidatorPubKey;
 use client_common::storage::SledStorage;
+use client_common::tendermint::types::Time;
 use client_common::{Error, ErrorKind, Result, ResultExt};
 use client_core::types::WalletKind;
 use client_core::wallet::{DefaultWalletClient, WalletClient};
@@ -35,12 +35,12 @@ pub struct InitCommand {
 
 impl InitCommand {
     pub fn new() -> Self {
-        let rewards_pool = Coin::new(2_500_000_000_000_000_000).unwrap();
+        let expansion_cap = Coin::new(2_500_000_000_000_000_000).unwrap();
         InitCommand {
             chain_id: "".to_string(),
             app_hash: "".to_string(),
             app_state: None,
-            genesis_dev: GenesisDevConfig::new(rewards_pool),
+            genesis_dev: GenesisDevConfig::new(expansion_cap),
             tendermint_pubkey: "".to_string(),
             staking_account_address: "".to_string(),
             other_staking_accounts: vec![],
@@ -135,7 +135,7 @@ impl InitCommand {
 
         loop {
             let i = self.distribution_addresses.len();
-            if self.remain_coin == self.genesis_dev.rewards_pool {
+            if self.remain_coin == self.genesis_dev.rewards_config.monetary_expansion_cap {
                 break;
             }
             let j = i - 1;
@@ -158,18 +158,14 @@ impl InitCommand {
 
     fn read_genesis_time(&mut self) -> Result<()> {
         // change
-        let old_genesis_time = self
-            .genesis_dev
-            .genesis_time
-            .to_rfc3339_opts(SecondsFormat::Micros, true);
+        let old_genesis_time = self.genesis_dev.genesis_time.to_string();
 
         let new_genesis_time: String = self.ask_string(
             format!("genesis_time( {} )=", old_genesis_time).as_str(),
             old_genesis_time.as_str(),
         );
 
-        self.genesis_dev.genesis_time =
-            DateTime::from(DateTime::parse_from_rfc3339(&new_genesis_time).unwrap());
+        self.genesis_dev.genesis_time = Time::from_str(&new_genesis_time).unwrap();
         Ok(())
     }
 
@@ -178,10 +174,13 @@ impl InitCommand {
             "{} {}",
             self.staking_account_address, self.tendermint_pubkey
         );
-        let pubkey = ValidatorPubkey {
-            consensus_pubkey_type: ValidatorKeyType::Ed25519,
-            consensus_pubkey_b64: self.tendermint_pubkey.clone(),
-        };
+        let pubkey = TendermintValidatorPubKey::from_base64(self.tendermint_pubkey.as_bytes())
+            .chain(|| {
+                (
+                    ErrorKind::InvalidInput,
+                    "invalid base64 encoded validator public key",
+                )
+            })?;
         let address = self
             .staking_account_address
             .parse::<RedeemAddress>()
@@ -261,10 +260,7 @@ impl InitCommand {
 
         let app_hash = self.app_hash.clone();
         let app_state = self.app_state.clone();
-        let gt = self
-            .genesis_dev
-            .genesis_time
-            .to_rfc3339_opts(SecondsFormat::Micros, true);
+        let gt = self.genesis_dev.genesis_time.to_string();
         let mut json_string = String::from("");
         fs::read_to_string(&InitCommand::get_tendermint_filename())
             .and_then(|contents| {

@@ -5,9 +5,6 @@ IFS=
 # Global function return value
 RET_VALUE=0
 
-# change attribute
-chmod ug+s ./docker-data
-
 # @argument message
 function print_message() {
     echo "[$(date +"%Y-%m-%d|%T")] ${1}"
@@ -55,6 +52,15 @@ function build_chain_tx_enclave_docker_image() {
         --build-arg NETWORK_ID="${CHAIN_HEX_ID}"
     cd "${CWD}"
 }
+
+function build_chain_tx_enclave_query_docker_image() {
+    print_config "SGX_MODE" "${SGX_MODE}"
+    CWD=$(pwd)
+    cd ../ && docker build -t "${CHAIN_TX_ENCLAVE_QUERY_DOCKER_IMAGE}" \
+        -f ./chain-tx-enclave/tx-query/Dockerfile .
+    cd "${CWD}"
+}
+
 
 # @argument Tendermint directory
 function init_tendermint() {
@@ -168,7 +174,6 @@ EOF
 
 DEV_CONF=$(cat << EOF
 {
-    "rewards_pool": "6250000000000000000",
     "distribution": {
         "{STAKING_ADDRESS}": "2500000000000000000",
         "0x3ae55c16800dc4bd0e3397a9d7806fb1f11639de": "1250000000000000000"
@@ -189,13 +194,20 @@ DEV_CONF=$(cat << EOF
         "base_fee": "{BASE_FEE}",
         "per_byte_fee": "{PER_BYTE_FEE}"
     },
+    "rewards_config": {
+        "monetary_expansion_cap": "6250000000000000000",
+        "distribution_period": 86400,
+        "monetary_expansion_r0": 500,
+        "monetary_expansion_tau": 14500000000000000,
+        "monetary_expansion_decay": 999860
+    },
     "council_nodes": {
         "0x3ae55c16800dc4bd0e3397a9d7806fb1f11639de": [
             "integration test",
             "security@integration.test",
         {
-            "consensus_pubkey_type": "Ed25519",
-            "consensus_pubkey_b64": "{PUB_KEY}"
+            "type": "tendermint/PubKeyEd25519",
+            "value": "{PUB_KEY}"
         }]
     },
     "genesis_time": "{GENESIS_TIME}"
@@ -247,7 +259,7 @@ function _change_tenermint_chain_id() {
 }
 
 # Always execute at script located directory
-cd "$(dirname "${0}")"
+cd "$(dirname "${BASH_SOURCE[0]}")"
 
 # Source constants
 . ./const-env.sh
@@ -263,6 +275,9 @@ if [ -z "${USE_DOCKER_COMPOSE}" ]; then
     check_command_exist "cargo"
 fi
 
+# Allow current user to access docker data directory as owner
+chmod ug+s ./docker-data
+
 print_step "Build Chain image"
 if [ ! -z "${USE_DOCKER_COMPOSE}" ]; then
     build_chain_docker_image
@@ -272,6 +287,7 @@ fi
 
 print_step "Build Chain Transaction Enclave image"
 build_chain_tx_enclave_docker_image
+build_chain_tx_enclave_query_docker_image
 
 print_step "Initialize Tendermint"
 rm -rf "${TENDERMINT_TEMP_DIRECTORY}"

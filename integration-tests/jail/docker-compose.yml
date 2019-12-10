@@ -4,13 +4,13 @@ services:
   chain0:
     build: .
     volumes:
-      - ../..:/root/chain_src
       - ./disk:/root/disk
+      - ./disk/config0:/root/.tendermint/config
     image: chain_test0
     ports:
        - ${JAIL_CLIENT_RPC}:9981
        - ${JAIL_CHAIN_RPC}:26657
-    command: /root/disk/go0.sh
+    command: /root/disk/go.sh
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug
@@ -20,12 +20,10 @@ services:
   chain1:
     build: .
     volumes:
-      - ../..:/root/chain_src 
       - ./disk:/root/disk
+      - ./disk/config1:/root/.tendermint/config
     image: chain_test1
-    ports:
-       - "1012:22"
-    command: /root/disk/go1.sh
+    command: /root/disk/go.sh
     environment:
       RUST_BACKTRACE: 1
       RUST_LOG: debug    

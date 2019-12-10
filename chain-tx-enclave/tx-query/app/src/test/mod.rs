@@ -7,7 +7,8 @@ use chain_core::common::MerkleTree;
 use chain_core::init::address::RedeemAddress;
 use chain_core::init::coin::Coin;
 use chain_core::state::account::{
-    StakedState, StakedStateDestination, StakedStateAddress, StakedStateOpWitness, WithdrawUnbondedTx,
+    StakedState, StakedStateAddress, StakedStateDestination, StakedStateOpWitness,
+    WithdrawUnbondedTx,
 };
 use chain_core::tx::fee::Fee;
 use chain_core::tx::witness::tree::RawPubkey;
@@ -25,10 +26,10 @@ use chain_core::tx::{
         Tx, TxId,
     },
     witness::TxInWitness,
-    TxEnclaveAux,
+    TxAux, TxEnclaveAux,
 };
 use chain_core::ChainInfo;
-use client_common::PrivateKey;
+use client_common::{PrivateKey, SignedTransaction};
 use client_core::cipher::DefaultTransactionObfuscation;
 use client_core::cipher::TransactionObfuscation;
 use enclave_protocol::FLAGS;
@@ -45,9 +46,11 @@ use sgx_types::sgx_status_t;
 use std::net::TcpListener;
 use std::os::unix::io::AsRawFd;
 use std::path::Path;
+use std::process::Child;
 use std::process::Command;
 use std::thread;
 use std::time;
+use std::sync::mpsc::channel;
 
 pub fn get_ecdsa_witness<C: Signing>(
     secp: &Secp256k1<C>,
@@ -60,14 +63,15 @@ pub fn get_ecdsa_witness<C: Signing>(
 }
 
 fn get_account(account_address: &RedeemAddress) -> StakedState {
-    StakedState::new_init_unbonded(
-        Coin::one(),
-        0,
-        StakedStateAddress::from(*account_address),
-    )
+    StakedState::new_init_unbonded(Coin::one(), 0, StakedStateAddress::from(*account_address))
 }
 
 const TEST_NETWORK_ID: u8 = 0xab;
+
+pub fn fail_exit(validation: &mut Child) {
+    validation.kill();
+    std::process::exit(1);
+}
 
 pub fn test_integration() {
     let mut builder = Builder::new();
@@ -90,23 +94,23 @@ pub fn test_integration() {
         .spawn()
         .expect("failed to start tx validation");
     init_connection(&connection_socket);
+    let (tx,rx) = channel();
     let t = thread::spawn(move || {
+        info!("Trying to launch TX Query server...");
         let enclave = start_enclave();
+        tx.send(()).expect("Could not send signal on channel.");
+        info!("Running TX Query server...");
 
-        info!("Running TX Decryption Query server...");
+        let listener = TcpListener::bind(query_server_addr).expect("failed to bind the TCP socket");
 
-        let listener = TcpListener::bind(query_server_addr)
-            .expect("failed to bind the TCP socket");
-
-        for _ in 0..2 {
+        for _ in 0..3 {
             match listener.accept() {
                 Ok((stream, addr)) => {
                     info!("new client: {:?}", addr);
-                    let _ = stream.set_read_timeout(Some(time::Duration::new(TIMEOUT_SEC, 0)));
-                    let _ = stream.set_write_timeout(Some(time::Duration::new(TIMEOUT_SEC, 0)));
                     let mut retval = sgx_status_t::SGX_SUCCESS;
-                    let result =
-                        unsafe { run_server(enclave.geteid(), &mut retval, stream.as_raw_fd()) };
+                    let result = unsafe {
+                        run_server(enclave.geteid(), &mut retval, stream.as_raw_fd(), -1)
+                    };
                     match result {
                         sgx_status_t::SGX_SUCCESS => {
                             info!("client query finished");
@@ -139,16 +143,7 @@ pub fn test_integration() {
     );
     let txid = &tx0.id();
     let witness0 = StakedStateOpWitness::new(get_ecdsa_witness(&secp, &txid, &secret_key));
-    let withdrawtx = TxEnclaveAux::WithdrawUnbondedStakeTx {
-        no_of_outputs: tx0.outputs.len() as TxoIndex,
-        witness: witness0,
-        payload: TxObfuscated {
-            txid: tx0.id(),
-            key_from: 0,
-            init_vector: [0u8; 12],
-            txpayload: PlainTxAux::WithdrawUnbondedStakeTx(tx0).encode(),
-        },
-    };
+
     let account = get_account(&addr);
     let info = ChainInfo {
         min_fee_computed: Fee::new(Coin::zero()),
@@ -158,6 +153,52 @@ pub fn test_integration() {
     };
 
     ZMQ_SOCKET.with(|socket| {
+        info!("sending a block commit request");
+        let request = EnclaveRequest::CommitBlock {
+            app_hash: [0u8; 32],
+            info,
+        };
+        let req = request.encode();
+        socket.send(req, FLAGS).expect("request sending failed");
+        let msg = socket
+            .recv_bytes(FLAGS)
+            .expect("failed to receive a response");
+        let resp = EnclaveResponse::decode(&mut msg.as_slice()).expect("enclave tx response");
+        info!("received a block commit response");
+        match resp {
+            EnclaveResponse::CommitBlock(Ok(_)) => {
+                info!("ok block commit response");
+            }
+            _ => {
+                error!("failed block commit response");
+                fail_exit(&mut validation);
+            }
+        }
+        rx.recv().expect("Could not receive from channel.");
+        let c = DefaultTransactionObfuscation::new(
+            format!("localhost:{}", query_server_port),
+            "localhost".to_owned(),
+        );
+        info!("sending a enc request");
+        let wrapped = c.encrypt(SignedTransaction::WithdrawUnbondedStakeTransaction(
+            tx0,
+            Box::new(account.clone()),
+            witness0,
+        ));
+        let withdrawtx = match wrapped {
+            Ok(TxAux::EnclaveTx(tx)) => tx,
+            Ok(_) => {
+                error!("failed enc request");
+                fail_exit(&mut validation);
+                panic!();
+            }
+            Err(e) => {
+                error!("failed enc request, {:?}", e);
+                fail_exit(&mut validation);
+                panic!();
+            }
+        };
+
         info!("sending a TX request");
         let request = EnclaveRequest::new_tx_request(withdrawtx, Some(account), info);
         let req = request.encode();
@@ -172,11 +213,13 @@ pub fn test_integration() {
                 info!("ok tx response");
             }
             _ => {
-                panic!("failed tx response");
+                error!("failed tx response");
+                fail_exit(&mut validation);
             }
         }
         let request2 = EnclaveRequest::CommitBlock {
-            app_hash: [0u8; 32], info,
+            app_hash: [0u8; 32],
+            info,
         };
         let req2 = request2.encode();
         socket.send(req2, FLAGS).expect("request sending failed");
@@ -190,15 +233,13 @@ pub fn test_integration() {
                 info!("ok commit response");
             }
             _ => {
-                panic!("failed commit response");
+                error!("failed commit response");
+                fail_exit(&mut validation);
             }
         }
 
         thread::sleep(time::Duration::from_secs(10));
-        let c = DefaultTransactionObfuscation::new(
-            format!("localhost:{}", query_server_port),
-            "localhost".to_owned(),
-        );
+
         let txids = vec![*txid];
         let r1 = c.decrypt(
             txids.as_slice(),
@@ -209,8 +250,9 @@ pub fn test_integration() {
                 // TODO: check tx details
                 assert_eq!(v.len(), 1, "expected one TX");
             }
-            _ => {
-                panic!("wrong decryption response");
+            Err(e) => {
+                error!("wrong decryption response: {}", e);
+                fail_exit(&mut validation);
             }
         }
         let r2 = c.decrypt(txids.as_slice(), &PrivateKey::new().expect("random key"));
@@ -218,8 +260,9 @@ pub fn test_integration() {
             Ok(v) => {
                 assert_eq!(v.len(), 0, "expected no TX");
             }
-            _ => {
-                panic!("wrong decryption response");
+            Err(e) => {
+                error!("wrong decryption response: {}", e);
+                fail_exit(&mut validation);
             }
         }
         validation.kill();

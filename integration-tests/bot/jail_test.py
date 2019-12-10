@@ -61,6 +61,12 @@ class Program :
     def unjail(self,name, passphrase, address):
         try:
             return self.rpc.staking.unjail(address, name)
+        except KeyboardInterrupt as ex:
+            print("unjail fail={}".format(ex))
+        except SystemExit as ex:
+            print("unjail fail={}".format(ex))
+        except Exception as ex:
+            print("unjail fail={}".format(ex))
         except :
             print("unjail fail")
 
@@ -104,10 +110,7 @@ class Program :
         self.wait_for_ready(2)
         containers=self.get_containers()
         print(containers)
-        if "jail_chain1_1" in containers :
-            assert True
-        else :
-            assert False
+        assert "jail_chain1_1" in containers 
         print("wait for jailing")
         time.sleep(10)
         jailthis = containers["jail_chain1_1"]
@@ -117,10 +120,7 @@ class Program :
         #jailed
         containers=self.get_containers()
         print(containers)
-        if "jail_chain1_1" in containers :
-            assert False
-        else :
-            assert True 
+        assert "jail_chain1_1" not in containers
         print("jail test success")
 
 
@@ -129,13 +129,12 @@ class Program :
         print("test unjailing")
         self.wait_for_ready(1)
 
-        count=2
         MAX_TIME = 3600  
         while True:
             current_time= time.time()
             elasped_time= current_time - initial_time
             remain_time = MAX_TIME - elasped_time
-            validators=self.check_validators()
+            self.check_validators()
             if remain_time< 0 :
                 assert False
             self.unjail("b","1", self.node1_address)
@@ -143,7 +142,7 @@ class Program :
             print("state {}".format(state))
             punishment=state["punishment"] 
             print("{0}  remain time={1:.2f}  punishment {2}".format(datetime.datetime.now(), remain_time, punishment))
-            if punishment== None :
+            if punishment is None :
                 print("unjailed!!")
                 break
             else :
@@ -156,6 +155,12 @@ class Program :
         self.test_jailing()
         try :
             self.restore_wallets()
+        except KeyboardInterrupt as ex:
+            print("wallet already exists={}".format(ex))
+        except SystemExit as ex:
+            print("wallet already exists={}".format(ex))
+        except Exception as ex:
+            print("wallet already exists={}".format(ex))
         except:
             print("wallet already exists")
         self.create_addresses()
