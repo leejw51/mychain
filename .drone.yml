@@ -29,21 +29,14 @@ steps:
 - name: integration-tests
   commands:
   - cd integration-tests/jail
-  - . ./my.sh
-  - pwd
-  - export SEED_ID="ok"
-  - echo "i am test1"
+  - ./run.sh
 
 - name: Teardown
   commands:
-  - echo "teardown"
-  - pwd
   - cd integration-tests/jail
-  - . ./my.sh
-  - echo "SEED_ID" $SEED_ID
-  - pwd
+  - . ./run_open_port.sh
+  - . ./run_test_env.sh
   - docker-compose down
-  - echo "i am teardown" 
   when:
     status:
      - success
