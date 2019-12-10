@@ -29,13 +29,13 @@ steps:
 - name: integration-tests
   commands:
   - cd integration-tests/jail
-  - ./run.sh
+  - echo "./run.sh"
 
 - name: Teardown
   commands:
   - cd integration-tests/jail
-  - . ./run_open_port.sh
-  - . ./run_test_env.sh
+  - export JAIL_CLIENT_RPC=9981
+  - export JAIL_CHAIN_RPC=9981
   - docker-compose down
   when:
     status:
