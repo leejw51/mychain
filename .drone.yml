@@ -35,7 +35,7 @@ steps:
   commands:
   - cd integration-tests/jail
   - export JAIL_CLIENT_RPC=9981
-  - export JAIL_CHAIN_RPC=9981
+  - export JAIL_CHAIN_RPC=26657
   - docker-compose down
   when:
     status:
