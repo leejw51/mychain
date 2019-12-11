@@ -9,6 +9,7 @@ echo "chain rpc port="$JAIL_CHAIN_RPC
 
 
 export CURRENT_HASH=$(git rev-parse HEAD)
+echo "CURRENT_HASH=" $CURRENT_HASH
 docker-compose $CURRENT_HASH up -d  
 echo "docker compose ok"
 nix-shell ./jail.nix  --run "export PASSPHRASE=1 && python3 ../bot/jail_test.py"
