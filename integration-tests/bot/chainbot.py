@@ -35,7 +35,7 @@ class SigningKey:
         return hashlib.sha256(bytes(vk)).hexdigest()[:40].upper()
 
 
-def tendermint_cfg(moniker, hostname, app_port, rpc_port, p2p_port, peers):
+def tendermint_cfg(moniker, app_port, rpc_port, p2p_port, peers):
     return {
         'proxy_app': 'tcp://127.0.0.1:%d' % app_port,
         'moniker': moniker,
@@ -43,7 +43,6 @@ def tendermint_cfg(moniker, hostname, app_port, rpc_port, p2p_port, peers):
         'db_backend': 'goleveldb',
         'db_dir': 'data',
         'log_level': 'main:info,state:info,*:error',
-        #'log_level': '*:debug',
         'log_format': 'plain',
         'genesis_file': 'config/genesis.json',
         'priv_validator_key_file': 'config/priv_validator_key.json',
@@ -54,7 +53,7 @@ def tendermint_cfg(moniker, hostname, app_port, rpc_port, p2p_port, peers):
         'prof_laddr': '',
         'filter_peers': False,
         'rpc': {
-            'laddr': 'tcp://%s:%d' % (hostname, rpc_port),
+            'laddr': 'tcp://0.0.0.0:%d' % rpc_port,
             'cors_allowed_origins': [],
             'cors_allowed_methods': [
                 'HEAD',
@@ -433,22 +432,7 @@ async def init_wallet(wallet_root, mnemonic, chain_id):
             b'123456\n',
             env=env,
         )
-def write_json(cfg, app_hash, root_path):
-    node_cfg= cfg['nodes'][0]
-    info= {"app_hash":app_hash, "seed_id":  SigningKey(node_cfg['node_seed']).validator_address().lower()}
-    # write
-    json.dump(info,
-                open(root_path / Path('info.json'), 'w'),
-                indent=4)
-    # write nodes
-    json.dump(cfg,
-                open(root_path / Path('nodes_info.json'), 'w'),
-                indent=4)
-    # write
-    f = open("run_test_env.sh", "w")
-    f.write("export APP_HASH={}\n".format(info["app_hash"]))
-    f.write("export SEED_ID={}\n".format(info["seed_id"]))
-    f.close()
+
 
 async def init_cluster(cfg):
     await populate_wallet_addresses(cfg['nodes'])
@@ -457,8 +441,14 @@ async def init_cluster(cfg):
     genesis = await gen_genesis(cfg)
     app_hash = genesis['app_hash']
     root_path = Path(cfg['root_path']).resolve()
+    if not root_path.exists():
+        root_path.mkdir()
 
-    write_json(cfg, app_hash, root_path)
+    json.dump(
+        cfg,
+        open(root_path / Path('info.json'), 'w'),
+        indent=4
+    )
 
     for i, node in enumerate(cfg['nodes']):
         base_port = node['base_port']
@@ -482,7 +472,6 @@ async def init_cluster(cfg):
             patch.apply(
                 tendermint_cfg(
                     node_name,
-                    node['hostname'],
                     base_port + 8,
                     base_port + 7,
                     base_port + 6,
@@ -527,16 +516,17 @@ def gen_seed():
 async def populate_wallet_addresses(nodes):
     for node in nodes:
         node['staking'] = await gen_wallet_addr(node['mnemonic'], type='Staking', count=2)
-        # node['transfer'] = await gen_wallet_addr(node['mnemonic'], type='Transfer', count=3)
+        node['transfer'] = await gen_wallet_addr(node['mnemonic'], type='Transfer', count=2)
+        node['node_id'] = SigningKey(node['node_seed']).validator_address().lower()
 
 
 class CLI:
-    def gen(self, count=1, expansion_cap=1000000000000000000,
-            dist=1000000000000000000,
-            genesis_time="2019-11-20T08:56:48.618137Z",
-            base_fee='0.0', per_byte_fee='0.0',
-            base_port=26650, sgx_device=None,
-            chain_id='test-chain-y3m1e6-AB', root_path='./data', hostname='127.0.0.1'):
+    def _gen(self, count=1, expansion_cap=1000000000000000000,
+             dist=1000000000000000000,
+             genesis_time="2019-11-20T08:56:48.618137Z",
+             base_fee='0.0', per_byte_fee='0.0',
+             base_port=26650, sgx_device=None,
+             chain_id='test-chain-y3m1e6-AB', root_path='./data', hostname='127.0.0.1'):
         '''Generate testnet node specification
         :param count: Number of nodes, [default: 1].
         '''
@@ -571,19 +561,30 @@ class CLI:
                 {'op': 'add', 'path': '/consensus/create_empty_blocks_interval', 'value': '0s'},
             ],
         }
-        print(json.dumps(cfg, indent=4))
         return cfg
+
+    def gen(self, count=1, expansion_cap=1000000000000000000,
+            dist=1000000000000000000,
+            genesis_time="2019-11-20T08:56:48.618137Z",
+            base_fee='0.0', per_byte_fee='0.0',
+            base_port=26650, sgx_device=None,
+            chain_id='test-chain-y3m1e6-AB', root_path='./data', hostname='127.0.0.1'):
+        cfg = self._gen(
+            count, expansion_cap, dist, genesis_time,
+            base_fee, per_byte_fee, base_port,
+            sgx_device, chain_id, root_path, hostname
+        )
+        return json.dumps(cfg, indent=4)
+
+    def _prepare(self, cfg):
+        asyncio.run(init_cluster(cfg))
 
     def prepare(self, spec=None):
         '''Prepare tendermint testnet based on specification
         :param spec: Path of specification file, [default: stdin]
         '''
         cfg = json.load(open(spec) if spec else sys.stdin)
-        asyncio.run(init_cluster(cfg))
-        print('Prepared succesfully', cfg['root_path'])
-
-    def prepare_cfg(self,cfg):
-        asyncio.run(init_cluster(cfg))
+        self._prepare(cfg)
         print('Prepared succesfully', cfg['root_path'])
 
 

@@ -155,7 +155,7 @@ class Program :
 
     def read_info(self):
         print("read data")
-        with open('nodes_info.json') as json_file:
+        with open('info.json') as json_file:
             data = json.load(json_file)
         print(json.dumps(data,indent=4))
         self.node0_address= data["nodes"][0]["staking"][0]
