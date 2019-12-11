@@ -1,7 +1,8 @@
 #!/bin/bash
 echo "run2"
 
-docker-compose -p test up -d
+export CURRENT_HASH=$(git rev-parse HEAD)
+docker-compose -p CURRENT_HASH up -d
 echo "run docker"
 sleep 10
 
