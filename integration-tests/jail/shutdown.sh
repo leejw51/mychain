@@ -1,2 +1,2 @@
 #!/bin/bash
-echo "shutdown"
+echo -p test "shutdown"
