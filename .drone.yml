@@ -28,7 +28,7 @@ steps:
   commands:
   - cd integration-tests/jail
   - sleep 5
-  - ./run2.sh
+  - ./run.sh
  
 
 - name: Teardown
