@@ -6,6 +6,8 @@ import datetime
 import time
 import jsonrpcclient
 from chainrpc import RPC, Blockchain
+from decouple import config
+CURRENT_HASH = config('CURRENT_HASH', '')
 class Program :
     def __init__(self) :
         self.rpc = RPC()
@@ -102,17 +104,17 @@ class Program :
         self.wait_for_ready(2)
         containers=self.get_containers()
         print(containers)
-        assert "jail_chain1_1" in containers 
+        assert "{}_chain1_1".format(CURRENT_HASH) in containers 
         print("wait for jailing")
         time.sleep(10)
-        jailthis = containers["jail_chain1_1"]
+        jailthis = containers["{}_chain1_1".format(CURRENT_HASH)]
         print("jail = " , jailthis)
         jailthis.kill()
         self.wait_for_ready(1)
         #jailed
         containers=self.get_containers()
         print(containers)
-        assert "jail_chain1_1" not in containers
+        assert "{}_chain1_1".format(CURRENT_HASH) not in containers
         print("jail test success")
 
 
@@ -165,6 +167,7 @@ class Program :
         self.node1_mnemonics=data["nodes"][1]["mnemonic"]
         
     def display_info(self):
+        print("jail test current hash={}".format(CURRENT_HASH))
         print("node0 staking= {}".format(self.node0_address))
         print("node1 staking= {}".format(self.node1_address))
         print("node0 mnemonics= {}".format(self.node0_mnemonics))
