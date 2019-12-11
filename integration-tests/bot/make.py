@@ -2,8 +2,6 @@
 from chainbot import CLI
 import json
 import jsonpatch
-from decouple import config
-CURRENT_HASH = config('CURRENT_HASH', '')
 a = CLI()
 print("make config")
 src=a._gen(count=2, chain_id='test-ab', expansion_cap=50000000000000000,  root_path='./', hostname='localhost')
@@ -14,8 +12,8 @@ patch = jsonpatch.JsonPatch([
     {'op': 'replace', 'path': '/nodes/1/unbonded_coin', 'value': 3700000000000000000},
     {'op': 'replace', 'path': '/nodes/0/base_port', 'value':26650},
     {'op': 'replace', 'path': '/nodes/1/base_port', 'value':26650},
-    {'op': 'replace', 'path': '/nodes/0/hostname', 'value':'{}_chain0_1'.format(CURRENT_HASH)},
-    {'op': 'replace', 'path': '/nodes/1/hostname', 'value':'{}_chain1_1'.format(CURRENT_HASH)},
+    {'op': 'replace', 'path': '/nodes/0/hostname', 'value':'chain0'},
+    {'op': 'replace', 'path': '/nodes/1/hostname', 'value':'chain1'},
     {'op': 'add', 'path': '/chain_config_patch/2', 'value': {"op":"replace", "path":"/slashing_config/slash_wait_period", "value":10} },
     {'op': 'add', 'path': '/chain_config_patch/3', 'value': {"op":"replace", "path":"/jailing_config/jail_duration", "value":86} },
     {'op': 'add', 'path': '/chain_config_patch/4', 'value': {"op":"replace", "path":"/jailing_config/block_signing_window", "value":20} },
