@@ -2,6 +2,9 @@
 echo "setup"
 sleep 1
 
+export CURRENT_HASH=$(git rev-parse HEAD)
+echo "setup CURRENT_HASH=" $CURRENT_HASH
+
 echo PATH=$PWD/disk/bin:$PATH
 export PATH=$(pwd)/disk/bin:$PATH 
 nix-shell ./jail.nix  --run "export PASSPHRASE=1 && python3 ../bot/make.py"
