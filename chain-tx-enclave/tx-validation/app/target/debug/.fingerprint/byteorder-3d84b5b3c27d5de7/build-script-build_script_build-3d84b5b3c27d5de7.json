@@ -1,0 +1,1 @@
+{"rustc":1413680479590619863,"features":"[\"default\", \"std\"]","target":10088282520713642473,"profile":9935990280773120926,"path":9648390497579673853,"deps":[],"local":[{"CheckDepInfo":{"dep_info":"debug/.fingerprint/byteorder-3d84b5b3c27d5de7/dep-build-script-build_script_build-3d84b5b3c27d5de7"}}],"rustflags":["-Ctarget-feature=+aes,+ssse3"],"metadata":5398730104718078656}
