@@ -26,20 +26,7 @@ platform:
 steps:
 - name: integration-tests
   commands:
-  - cd integration-tests/jail
+  - cd integration-tests/test
   - sleep 5
   - ./run.sh
  
-
-- name: Teardown
-  commands:
-  - cd integration-tests/jail
-  - export JAIL_CLIENT_RPC=9981
-  - export JAIL_CHAIN_RPC=26657
-  - ./shutdown.sh 
-  when:
-    status:
-     - success
-     - failure
-
-
