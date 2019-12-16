@@ -1,2 +1,2 @@
 print("hi python")
-assert False
+assert True
