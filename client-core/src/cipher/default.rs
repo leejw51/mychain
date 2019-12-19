@@ -2,6 +2,8 @@ use super::sgx::EnclaveAttr;
 use crate::TransactionObfuscation;
 use chain_core::tx::data::TxId;
 use chain_core::tx::{TxAux, TxWithOutputs};
+use client_common::tendermint::types::AbciQueryExt;
+use client_common::tendermint::Client;
 use client_common::SECP;
 use client_common::{
     Error, ErrorKind, PrivateKey, Result, ResultExt, SignedTransaction, Transaction,
@@ -55,6 +57,36 @@ impl DefaultTransactionObfuscation {
             tqe_hostname: dns_name,
         }
     }
+
+    /// Get DefaultTransactionObfuscation from txquery call to Tendermint client
+    pub fn from_tx_query<C>(tendermint_client: &C) -> Result<DefaultTransactionObfuscation>
+    where
+        C: Client,
+    {
+        let result = tendermint_client.query("txquery", &[])?.bytes()?;
+        let address = std::str::from_utf8(&result).chain(|| {
+            (
+                ErrorKind::ConnectionError,
+                "Unable to decode txquery address",
+            )
+        })?;
+        DefaultTransactionObfuscation::from_tx_query_address(&address)
+    }
+
+    /// Get DefaultTransactionObfuscation from tx query address
+    pub fn from_tx_query_address(address: &str) -> Result<DefaultTransactionObfuscation> {
+        if let Some(hostname) = address.split(':').next() {
+            Ok(DefaultTransactionObfuscation::new(
+                address.to_string(),
+                hostname.to_string(),
+            ))
+        } else {
+            Err(Error::new(
+                ErrorKind::ConnectionError,
+                "Unable to decode txquery address",
+            ))
+        }
+    }
 }
 
 impl TransactionObfuscation for DefaultTransactionObfuscation {
@@ -63,6 +95,10 @@ impl TransactionObfuscation for DefaultTransactionObfuscation {
         transaction_ids: &[TxId],
         private_key: &PrivateKey,
     ) -> Result<Vec<Transaction>> {
+        if transaction_ids.is_empty() {
+            return Ok(vec![]);
+        }
+
         let client_config = get_tls_config();
         let dns_name = self.tqe_hostname.as_ref();
         // FIXME: better response from enclave and retry mechanism

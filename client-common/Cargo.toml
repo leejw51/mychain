@@ -1,15 +1,15 @@
 [package]
 name = "client-common"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Devashish Dixit <devashish@crypto.com>"]
 edition = "2018"
 
 [dependencies]
 chain-core = { path = "../chain-core" }
 chain-tx-filter = { path = "../chain-tx-filter" }
-secp256k1zkp = { git = "https://github.com/crypto-com/rust-secp256k1-zkp.git", rev = "8b9a38b870a7759fcdbd4a5d435b5ba873c70afd", features = ["serde", "zeroize", "rand", "recovery", "endomorphism", "musig"] }
+secp256k1zkp = { git = "https://github.com/crypto-com/rust-secp256k1-zkp.git", rev = "be445f29a96af31fe079611d26c07f1f596d1c5f", features = ["serde", "zeroize", "rand", "recovery", "endomorphism", "musig"] }
 rand = "0.7"
-log = "0.4"
+log = "0.4.8"
 aes-gcm-siv = "0.3"
 blake2 = "0.8"
 hex = "0.4"
@@ -18,17 +18,13 @@ secstr = { version = "0.3.2", features = ["serde"] }
 zeroize = "1.1"
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4", features = ["serde"] }
-sled = { version = "0.29", optional = true }
+sled = { version = "0.30.1", optional = true }
 jsonrpc = { version = "0.11", optional = true }
 serde_json = { version = "1.0", optional = true }
 parity-scale-codec = { features = ["derive"], version = "1.1" }
 websocket = { version = "0.24", default-features = false, features = ["sync"], optional = true }
-tendermint = { git = "https://github.com/crypto-com/tendermint-rs.git", default-features = false, rev = "8e95731ee671777638ab2a3d5dfd7b35992b86aa" }
+tendermint = { git = "https://github.com/crypto-com/tendermint-rs.git", default-features = false, rev = "a32cec297d80d240781c9ca2aaa71cace93e7510" }
 itertools = "0.8"
-# Restrict transistive dependency `signatory-dalek` of `tendermint` to avoid compilation error
-# Remove when `signatory-dalek` is updated
-# https://github.com/tendermint/signatory/blob/develop/signatory-dalek/Cargo.toml
-ed25519-dalek = "= 1.0.0-pre.2"
 
 [features]
 default = ["sled", "websocket-rpc"]

@@ -1,6 +1,6 @@
 [package]
 name = "client-core"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["Devashish Dixit <devashish@crypto.com>"]
 description = "This crate exposes following functionalities for interacting with Crypto.com Chain."
 edition = "2018"
@@ -11,7 +11,7 @@ client-common = { path = "../client-common" }
 chain-tx-filter = { path = "../chain-tx-filter" }
 enclave-protocol = { path = "../enclave-protocol" }
 chain-tx-validation = { path = "../chain-tx-validation" }
-secp256k1zkp = { git = "https://github.com/crypto-com/rust-secp256k1-zkp.git", rev = "8b9a38b870a7759fcdbd4a5d435b5ba873c70afd", features = ["serde", "zeroize", "rand", "recovery", "endomorphism", "musig"] }
+secp256k1zkp = { git = "https://github.com/crypto-com/rust-secp256k1-zkp.git", rev = "be445f29a96af31fe079611d26c07f1f596d1c5f", features = ["serde", "zeroize", "rand", "recovery", "endomorphism", "musig"] }
 parity-scale-codec = { features = ["derive"], version = "1.1" }
 chrono = { version = "0.4", features = ["serde"] }
 rand = "0.7"
@@ -37,7 +37,9 @@ tiny-bip39 = { version = "0.6", default-features = false }
 unicase = "2.6.0"
 lazy_static = "1.4.0"
 ring = "0.16.9"
-tendermint = { git = "https://github.com/crypto-com/tendermint-rs.git", default-features = false, rev = "8e95731ee671777638ab2a3d5dfd7b35992b86aa" }
+tendermint = { git = "https://github.com/crypto-com/tendermint-rs.git", default-features = false, rev = "a32cec297d80d240781c9ca2aaa71cace93e7510" }
+thiserror = { version = "1.0", default-features = false }
+non-empty-vec = "0.1"
 
 [dev-dependencies]
 hex = "0.4.0"

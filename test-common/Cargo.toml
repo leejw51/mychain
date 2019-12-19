@@ -1,13 +1,13 @@
 [package]
 name = "test-common"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["yihuang <yi.codeplayer@gmail.com>"]
 edition = "2018"
 
 [dependencies]
 sha2 = { version = "0.8", default-features = false }
-signatory = { version = "0.16", features = ["ed25519", "ecdsa"] }
-signatory-dalek = { version = "0.16" }
+signatory = { version = "0.17", features = ["ed25519", "ecdsa"] }
+signatory-dalek = "0.17"
 serde_json = { version = "1.0" }
 subtle = "2"
 subtle-encoding = { version = "0.5", features = ["bech32-preview"] }
@@ -17,12 +17,12 @@ signature = "1.0.0-pre.1"
 abci = "0.6"
 kvdb-memorydb = "0.1"
 protobuf = "2.7.0"
-secp256k1zkp = { git = "https://github.com/crypto-com/rust-secp256k1-zkp.git", rev = "8b9a38b870a7759fcdbd4a5d435b5ba873c70afd", features = ["recovery", "endomorphism"] }
+secp256k1zkp = { git = "https://github.com/crypto-com/rust-secp256k1-zkp.git", rev = "be445f29a96af31fe079611d26c07f1f596d1c5f", features = ["recovery", "endomorphism"] }
 parity-scale-codec = { features = ["derive"], version = "1.1" }
 base64 = "0.11"
 hex = "0.4"
 
-tendermint = { git = "https://github.com/crypto-com/tendermint-rs.git", default-features = false, rev = "8e95731ee671777638ab2a3d5dfd7b35992b86aa" }
+tendermint = { git = "https://github.com/crypto-com/tendermint-rs.git", default-features = false, rev = "a32cec297d80d240781c9ca2aaa71cace93e7510" }
 chain-core = { path = "../chain-core" }
 chain-abci = { path = "../chain-abci" }
 client-common = { path = "../client-common" }
